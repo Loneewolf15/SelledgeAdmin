@@ -1,25 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Save, Building, Wrench, DollarSign, Shield, Bell, Settings, Plus, Trash2, Edit } from "lucide-react"
+import { Save, Building, Wrench, DollarSign, Shield, Bell, Settings, Plus, Trash2, Edit, Loader2 } from "lucide-react"
+import { api } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export function AdminSettings() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<string | null>(null)
+  const { toast } = useToast()
+
   const [propertySettings, setPropertySettings] = useState({
-    defaultCommissionRate: "5",
-    minimumListingPrice: "500",
-    maximumListingPrice: "50000",
-    autoApprovalThreshold: "2000",
-    requireKYCForListing: true,
-    allowPetFriendlyListings: true,
-    requirePropertyInspection: false,
-    maxImagesPerListing: "10",
-    listingExpirationDays: "90",
+    default_commission_rate: "5",
+    minimum_listing_price: "500",
+    maximum_listing_price: "50000",
+    auto_approval_threshold: "2000",
+    require_kyc_for_listing: true,
+    allow_pet_friendly_listings: true,
+    require_property_inspection: false,
+    max_images_per_listing: "10",
+    listing_expiration_days: "90",
   })
 
   const [equipmentCategories, setEquipmentCategories] = useState([
@@ -31,33 +37,123 @@ export function AdminSettings() {
   ])
 
   const [maintenanceSettings, setMaintenanceSettings] = useState({
-    emergencyResponseTime: "2",
-    routineMaintenanceSchedule: "monthly",
-    inspectionFrequency: "quarterly",
-    maintenanceRequestAutoAssign: true,
-    tenantMaintenancePortal: true,
-    maintenanceNotifications: true,
+    emergency_response_time: "2",
+    routine_maintenance_schedule: "monthly",
+    inspection_frequency: "quarterly",
+    maintenance_request_auto_assign: true,
+    tenant_maintenance_portal: true,
+    maintenance_notifications: true,
   })
 
   const [systemSettings, setSystemSettings] = useState({
-    platformName: "PropertyHub Admin",
-    maintenanceMode: false,
-    userRegistration: true,
-    emailNotifications: true,
-    adminEmail: "admin@propertyhub.com",
-    supportEmail: "support@propertyhub.com",
+    platform_name: "PropertyHub Admin",
+    maintenance_mode: false,
+    user_registration: true,
+    email_notifications: true,
+    admin_email: "admin@propertyhub.com",
+    support_email: "support@propertyhub.com",
   })
 
-  const handleSavePropertySettings = () => {
-    console.log("Property settings saved:", propertySettings)
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true)
+      const res = await api.getSettingsGrouped()
+      if (res.status && res.data) {
+        // Update property settings
+        if (res.data.property) {
+          setPropertySettings((prev) => ({ ...prev, ...res.data.property }))
+        }
+        // Update maintenance settings
+        if (res.data.maintenance) {
+          setMaintenanceSettings((prev) => ({ ...prev, ...res.data.maintenance }))
+        }
+        // Update system settings
+        if (res.data.system) {
+          setSystemSettings((prev) => ({ ...prev, ...res.data.system }))
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load settings",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSaveMaintenanceSettings = () => {
-    console.log("Maintenance settings saved:", maintenanceSettings)
+  const handleSavePropertySettings = async () => {
+    try {
+      setSaving("property")
+      const res = await api.updateMultipleSettings(propertySettings)
+      if (res.status) {
+        toast({
+          title: "Success",
+          description: "Property settings saved successfully",
+        })
+      } else {
+        throw new Error(res.message || "Failed to save settings")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save property settings",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(null)
+    }
   }
 
-  const handleSaveSystemSettings = () => {
-    console.log("System settings saved:", systemSettings)
+  const handleSaveMaintenanceSettings = async () => {
+    try {
+      setSaving("maintenance")
+      const res = await api.updateMultipleSettings(maintenanceSettings)
+      if (res.status) {
+        toast({
+          title: "Success",
+          description: "Maintenance settings saved successfully",
+        })
+      } else {
+        throw new Error(res.message || "Failed to save settings")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save maintenance settings",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  const handleSaveSystemSettings = async () => {
+    try {
+      setSaving("system")
+      const res = await api.updateMultipleSettings(systemSettings)
+      if (res.status) {
+        toast({
+          title: "Success",
+          description: "System settings saved successfully",
+        })
+      } else {
+        throw new Error(res.message || "Failed to save settings")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save system settings",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(null)
+    }
   }
 
   const updatePropertySetting = (key: string, value: any) => {
@@ -107,8 +203,8 @@ export function AdminSettings() {
                 <Input
                   id="commissionRate"
                   type="number"
-                  value={propertySettings.defaultCommissionRate}
-                  onChange={(e) => updatePropertySetting("defaultCommissionRate", e.target.value)}
+                  value={propertySettings.default_commission_rate}
+                  onChange={(e) => updatePropertySetting("default_commission_rate", e.target.value)}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -117,8 +213,8 @@ export function AdminSettings() {
                   <Input
                     id="minPrice"
                     type="number"
-                    value={propertySettings.minimumListingPrice}
-                    onChange={(e) => updatePropertySetting("minimumListingPrice", e.target.value)}
+                    value={propertySettings.minimum_listing_price}
+                    onChange={(e) => updatePropertySetting("minimum_listing_price", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -126,8 +222,8 @@ export function AdminSettings() {
                   <Input
                     id="maxPrice"
                     type="number"
-                    value={propertySettings.maximumListingPrice}
-                    onChange={(e) => updatePropertySetting("maximumListingPrice", e.target.value)}
+                    value={propertySettings.maximum_listing_price}
+                    onChange={(e) => updatePropertySetting("maximum_listing_price", e.target.value)}
                   />
                 </div>
               </div>
@@ -136,8 +232,8 @@ export function AdminSettings() {
                 <Input
                   id="autoApproval"
                   type="number"
-                  value={propertySettings.autoApprovalThreshold}
-                  onChange={(e) => updatePropertySetting("autoApprovalThreshold", e.target.value)}
+                  value={propertySettings.auto_approval_threshold}
+                  onChange={(e) => updatePropertySetting("auto_approval_threshold", e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">Listings below this amount are auto-approved</p>
               </div>
@@ -159,8 +255,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Users must complete KYC before listing</p>
                 </div>
                 <Switch
-                  checked={propertySettings.requireKYCForListing}
-                  onCheckedChange={(checked) => updatePropertySetting("requireKYCForListing", checked)}
+                  checked={propertySettings.require_kyc_for_listing}
+                  onCheckedChange={(checked) => updatePropertySetting("require_kyc_for_listing", checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -169,8 +265,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Enable pet-friendly property options</p>
                 </div>
                 <Switch
-                  checked={propertySettings.allowPetFriendlyListings}
-                  onCheckedChange={(checked) => updatePropertySetting("allowPetFriendlyListings", checked)}
+                  checked={propertySettings.allow_pet_friendly_listings}
+                  onCheckedChange={(checked) => updatePropertySetting("allow_pet_friendly_listings", checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -179,8 +275,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Mandatory inspection before approval</p>
                 </div>
                 <Switch
-                  checked={propertySettings.requirePropertyInspection}
-                  onCheckedChange={(checked) => updatePropertySetting("requirePropertyInspection", checked)}
+                  checked={propertySettings.require_property_inspection}
+                  onCheckedChange={(checked) => updatePropertySetting("require_property_inspection", checked)}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -189,8 +285,8 @@ export function AdminSettings() {
                   <Input
                     id="maxImages"
                     type="number"
-                    value={propertySettings.maxImagesPerListing}
-                    onChange={(e) => updatePropertySetting("maxImagesPerListing", e.target.value)}
+                    value={propertySettings.max_images_per_listing}
+                    onChange={(e) => updatePropertySetting("max_images_per_listing", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -198,8 +294,8 @@ export function AdminSettings() {
                   <Input
                     id="expirationDays"
                     type="number"
-                    value={propertySettings.listingExpirationDays}
-                    onChange={(e) => updatePropertySetting("listingExpirationDays", e.target.value)}
+                    value={propertySettings.listing_expiration_days}
+                    onChange={(e) => updatePropertySetting("listing_expiration_days", e.target.value)}
                   />
                 </div>
               </div>
@@ -208,9 +304,9 @@ export function AdminSettings() {
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={handleSavePropertySettings} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Property Settings
+          <Button onClick={handleSavePropertySettings} disabled={saving === "property"} className="gap-2">
+            {saving === "property" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving === "property" ? "Saving..." : "Save Property Settings"}
           </Button>
         </div>
       </div>
@@ -281,16 +377,16 @@ export function AdminSettings() {
                 <Input
                   id="emergencyResponse"
                   type="number"
-                  value={maintenanceSettings.emergencyResponseTime}
-                  onChange={(e) => updateMaintenanceSetting("emergencyResponseTime", e.target.value)}
+                  value={maintenanceSettings.emergency_response_time}
+                  onChange={(e) => updateMaintenanceSetting("emergency_response_time", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="routineMaintenance">Routine Maintenance Schedule</Label>
                 <select
                   id="routineMaintenance"
-                  value={maintenanceSettings.routineMaintenanceSchedule}
-                  onChange={(e) => updateMaintenanceSetting("routineMaintenanceSchedule", e.target.value)}
+                  value={maintenanceSettings.routine_maintenance_schedule}
+                  onChange={(e) => updateMaintenanceSetting("routine_maintenance_schedule", e.target.value)}
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="weekly">Weekly</option>
@@ -302,8 +398,8 @@ export function AdminSettings() {
                 <Label htmlFor="inspectionFreq">Inspection Frequency</Label>
                 <select
                   id="inspectionFreq"
-                  value={maintenanceSettings.inspectionFrequency}
-                  onChange={(e) => updateMaintenanceSetting("inspectionFrequency", e.target.value)}
+                  value={maintenanceSettings.inspection_frequency}
+                  onChange={(e) => updateMaintenanceSetting("inspection_frequency", e.target.value)}
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="monthly">Monthly</option>
@@ -326,8 +422,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Automatically assign requests to available staff</p>
                 </div>
                 <Switch
-                  checked={maintenanceSettings.maintenanceRequestAutoAssign}
-                  onCheckedChange={(checked) => updateMaintenanceSetting("maintenanceRequestAutoAssign", checked)}
+                  checked={maintenanceSettings.maintenance_request_auto_assign}
+                  onCheckedChange={(checked) => updateMaintenanceSetting("maintenance_request_auto_assign", checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -336,8 +432,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Allow tenants to submit maintenance requests</p>
                 </div>
                 <Switch
-                  checked={maintenanceSettings.tenantMaintenancePortal}
-                  onCheckedChange={(checked) => updateMaintenanceSetting("tenantMaintenancePortal", checked)}
+                  checked={maintenanceSettings.tenant_maintenance_portal}
+                  onCheckedChange={(checked) => updateMaintenanceSetting("tenant_maintenance_portal", checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -346,8 +442,8 @@ export function AdminSettings() {
                   <p className="text-sm text-muted-foreground">Send notifications for maintenance updates</p>
                 </div>
                 <Switch
-                  checked={maintenanceSettings.maintenanceNotifications}
-                  onCheckedChange={(checked) => updateMaintenanceSetting("maintenanceNotifications", checked)}
+                  checked={maintenanceSettings.maintenance_notifications}
+                  onCheckedChange={(checked) => updateMaintenanceSetting("maintenance_notifications", checked)}
                 />
               </div>
             </CardContent>
@@ -355,9 +451,9 @@ export function AdminSettings() {
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={handleSaveMaintenanceSettings} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Maintenance Settings
+          <Button onClick={handleSaveMaintenanceSettings} disabled={saving === "maintenance"} className="gap-2">
+            {saving === "maintenance" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving === "maintenance" ? "Saving..." : "Save Maintenance Settings"}
           </Button>
         </div>
       </div>
@@ -380,8 +476,8 @@ export function AdminSettings() {
                 <Label htmlFor="platformName">Platform Name</Label>
                 <Input
                   id="platformName"
-                  value={systemSettings.platformName}
-                  onChange={(e) => updateSystemSetting("platformName", e.target.value)}
+                  value={systemSettings.platform_name}
+                  onChange={(e) => updateSystemSetting("platform_name", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -389,8 +485,8 @@ export function AdminSettings() {
                 <Input
                   id="adminEmail"
                   type="email"
-                  value={systemSettings.adminEmail}
-                  onChange={(e) => updateSystemSetting("adminEmail", e.target.value)}
+                  value={systemSettings.admin_email}
+                  onChange={(e) => updateSystemSetting("admin_email", e.target.value)}
                 />
               </div>
             </div>
@@ -399,8 +495,8 @@ export function AdminSettings() {
               <Input
                 id="supportEmail"
                 type="email"
-                value={systemSettings.supportEmail}
-                onChange={(e) => updateSystemSetting("supportEmail", e.target.value)}
+                value={systemSettings.support_email}
+                onChange={(e) => updateSystemSetting("support_email", e.target.value)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -409,8 +505,8 @@ export function AdminSettings() {
                 <p className="text-sm text-muted-foreground">Temporarily disable platform access</p>
               </div>
               <Switch
-                checked={systemSettings.maintenanceMode}
-                onCheckedChange={(checked) => updateSystemSetting("maintenanceMode", checked)}
+                checked={systemSettings.maintenance_mode}
+                onCheckedChange={(checked) => updateSystemSetting("maintenance_mode", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -419,17 +515,17 @@ export function AdminSettings() {
                 <p className="text-sm text-muted-foreground">Allow new user registrations</p>
               </div>
               <Switch
-                checked={systemSettings.userRegistration}
-                onCheckedChange={(checked) => updateSystemSetting("userRegistration", checked)}
+                checked={systemSettings.user_registration}
+                onCheckedChange={(checked) => updateSystemSetting("user_registration", checked)}
               />
             </div>
           </CardContent>
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSaveSystemSettings} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save System Settings
+          <Button onClick={handleSaveSystemSettings} disabled={saving === "system"} className="gap-2">
+            {saving === "system" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving === "system" ? "Saving..." : "Save System Settings"}
           </Button>
         </div>
       </div>

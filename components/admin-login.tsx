@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Shield } from "lucide-react"
+import { Shield, AlertCircle } from "lucide-react"
+import { api } from "@/lib/api"
 
 interface AdminLoginProps {
   onLogin: () => void
@@ -17,16 +18,47 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate authentication - accept any email/password for demo
-    setTimeout(() => {
+    try {
+      // Call real backend API with requestID
+      const res = await fetch(`${api.API_BASE_URL}/users/loginfunc`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password, requestID: "rid_2006" }),
+      })
+      
+      const data = await res.json()
+      
+      if (data.status && data.data?.access_token) {
+        // Store token
+        localStorage.setItem("access_token", data.data.access_token)
+        
+        // Verify user has Admin role
+        const userData = data.data.user_data
+        const roles = userData.roles || []
+        const isAdmin = roles.some((r: any) => r.role_name === "Admin" || r === "Admin")
+        
+        if (isAdmin) {
+          onLogin()
+        } else {
+          setError("Access denied: Admin role required")
+          localStorage.removeItem("access_token")
+        }
+      } else {
+        setError(data.message || "Invalid credentials")
+      }
+    } catch (err) {
+      setError("Login failed. Please check your connection and try again.")
+      console.error("Login error:", err)
+    } finally {
       setIsLoading(false)
-      onLogin()
-    }, 1000)
+    }
   }
 
   return (
@@ -41,6 +73,12 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
+                <AlertCircle className="h-4 w-4" />
+                <span>{error}</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -67,7 +105,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          <p className="mt-4 text-sm text-muted-foreground text-center">Demo: Use any email and password to sign in</p>
+          <p className="mt-4 text-sm text-muted-foreground text-center">Use admin credentials to access the panel</p>
         </CardContent>
       </Card>
     </div>
