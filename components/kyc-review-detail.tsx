@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check, X, User, FileText, MapPin, Phone, Calendar, Globe } from "lucide-react"
 
+// Base URL for backend uploads
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost/selledgez/backend/public"
+
 interface KycRequest {
   id: string
   userId: string
@@ -46,6 +49,22 @@ interface KycReviewDetailProps {
 }
 
 export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycReviewDetailProps) {
+  // Helper function to construct full image URL
+  const getImageUrl = (imagePath: string | undefined) => {
+    if (!imagePath) return "/placeholder.svg"
+    
+    // If already a full URL, return as is
+    if (imagePath.startsWith("http")) return imagePath
+    
+    // If it's a relative path starting with /, construct full URL
+    if (imagePath.startsWith("/")) {
+      return `${BASE_URL}${imagePath}`
+    }
+    
+    // Otherwise, assume it's from uploads/kyc/{kycId}/
+    return `${BASE_URL}/uploads/kyc/${request.id}/${imagePath}`
+  }
+
   const getStatusBadge = (status: KycRequest["status"]) => {
     switch (status) {
       case "pending":
@@ -191,9 +210,12 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
               <div>
                 <p className="text-sm font-medium mb-2">Document Front</p>
                 <img
-                  src={request.documents.frontImage || "/placeholder.svg"}
+                  src={getImageUrl(request.documents.frontImage)}
                   alt="Document front"
                   className="w-full rounded-lg border"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
                 />
               </div>
 
@@ -201,9 +223,12 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
                 <div>
                   <p className="text-sm font-medium mb-2">Document Back</p>
                   <img
-                    src={request.documents.backImage || "/placeholder.svg"}
+                    src={getImageUrl(request.documents.backImage)}
                     alt="Document back"
                     className="w-full rounded-lg border"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg"
+                    }}
                   />
                 </div>
               )}
@@ -211,9 +236,12 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
               <div>
                 <p className="text-sm font-medium mb-2">Selfie Verification</p>
                 <img
-                  src={request.documents.selfieImage || "/placeholder.svg"}
+                  src={getImageUrl(request.documents.selfieImage)}
                   alt="Selfie verification"
                   className="w-full rounded-lg border"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
                 />
               </div>
             </CardContent>

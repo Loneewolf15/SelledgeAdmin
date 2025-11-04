@@ -97,7 +97,7 @@ export const api = {
     const cacheKey = `setting:all${group ? `:${group}` : ''}`;
     return cachedRequest(
       cacheKey,
-      () => request(`/setting/all${query}`, { method: "GET" }),
+      () => request(`/settings/all${query}`, { method: "GET" }),
       5 * 60 * 1000,
       skipCache
     );
@@ -105,19 +105,19 @@ export const api = {
   getSettingsGrouped(skipCache = false) {
     return cachedRequest(
       "setting:grouped",
-      () => request("/setting/grouped", { method: "GET" }),
+      () => request("/settings/grouped", { method: "GET" }),
       5 * 60 * 1000,
       skipCache
     );
   },
   async updateSetting(key: string, value: any) {
-    const result = await request("/setting/update", { method: "POST", body: JSON.stringify({ key, value }) });
+    const result = await request("/settings/update", { method: "POST", body: JSON.stringify({ key, value }) });
     // Invalidate settings cache
     invalidateCache(["setting:"]);
     return result;
   },
   async updateMultipleSettings(settings: Record<string, any>) {
-    const result = await request("/setting/updateMultiple", { method: "POST", body: JSON.stringify({ settings }) });
+    const result = await request("/settings/updateMultiple", { method: "POST", body: JSON.stringify({ settings }) });
     // Invalidate settings cache
     invalidateCache(["setting:"]);
     return result;
@@ -126,7 +126,46 @@ export const api = {
     return request("/settings/create", { method: "POST", body: JSON.stringify(data) });
   },
   deleteSetting(key: string) {
-    return request(`/setting/${key}`, { method: "DELETE" });
+    return request(`/settings/${key}`, { method: "DELETE" });
+  },
+
+  // Equipment Categories
+  getEquipmentCategories(skipCache = false) {
+    return cachedRequest(
+      "equipment:categories",
+      () => request("/settings/equipmentCategories", { method: "GET" }),
+      5 * 60 * 1000,
+      skipCache
+    );
+  },
+  async createEquipmentCategory(data: { name: string; description?: string; active?: boolean; item_type?: string }) {
+    const result = await request("/settings/createEquipmentCategory", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    invalidateCache(["equipment:"]);
+    return result;
+  },
+  async updateEquipmentCategory(data: { id: number; name: string; description?: string; active?: boolean }) {
+    const result = await request("/settings/updateEquipmentCategory", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    invalidateCache(["equipment:"]);
+    return result;
+  },
+  async toggleEquipmentCategory(id: number) {
+    const result = await request("/settings/toggleEquipmentCategory", {
+      method: "POST",
+      body: JSON.stringify({ id })
+    });
+    invalidateCache(["equipment:"]);
+    return result;
+  },
+  async deleteEquipmentCategory(id: number) {
+    const result = await request(`/settings/deleteEquipmentCategory/${id}`, { method: "DELETE" });
+    invalidateCache(["equipment:"]);
+    return result;
   },
   
   // User Management

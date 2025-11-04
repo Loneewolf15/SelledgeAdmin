@@ -7,13 +7,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { Save, Building, Wrench, DollarSign, Shield, Bell, Settings, Plus, Trash2, Edit, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
+interface Category {
+  id: number
+  slug: string
+  name: string
+  description: string | null
+  item_type: "property" | "equipment" | "general"
+  active: number
+  created_at: string
+  updated_at: string
+}
+
 export function AdminSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [categoryName, setCategoryName] = useState("")
+  const [categoryDescription, setCategoryDescription] = useState("")
+  const [categoryType, setCategoryType] = useState<"property" | "equipment">("equipment")
+  const [activeCategoryTab, setActiveCategoryTab] = useState<"property" | "equipment">("equipment")
   const { toast } = useToast()
 
   const [propertySettings, setPropertySettings] = useState({
@@ -28,13 +47,7 @@ export function AdminSettings() {
     listing_expiration_days: "90",
   })
 
-  const [equipmentCategories, setEquipmentCategories] = useState([
-    { id: 1, name: "HVAC Systems", description: "Heating, ventilation, and air conditioning", active: true },
-    { id: 2, name: "Kitchen Appliances", description: "Refrigerators, ovens, dishwashers", active: true },
-    { id: 3, name: "Laundry Equipment", description: "Washers, dryers, laundry facilities", active: true },
-    { id: 4, name: "Security Systems", description: "Cameras, alarms, access control", active: true },
-    { id: 5, name: "Fitness Equipment", description: "Gym equipment, exercise machines", active: false },
-  ])
+  const [allCategories, setAllCategories] = useState<Category[]>([])
 
   const [maintenanceSettings, setMaintenanceSettings] = useState({
     emergency_response_time: "2",
@@ -54,6 +67,9 @@ export function AdminSettings() {
     support_email: "support@propertyhub.com",
   })
 
+  // Filter categories based on active tab
+  const filteredCategories = allCategories.filter(cat => cat.item_type === activeCategoryTab)
+
   useEffect(() => {
     fetchSettings()
   }, [])
@@ -61,20 +77,28 @@ export function AdminSettings() {
   const fetchSettings = async () => {
     try {
       setLoading(true)
-      const res = await api.getSettingsGrouped()
-      if (res.status && res.data) {
+      const [settingsRes, categoriesRes] = await Promise.all([
+        api.getSettingsGrouped(),
+        api.getEquipmentCategories()
+      ])
+      
+      if (settingsRes.status && settingsRes.data) {
         // Update property settings
-        if (res.data.property) {
-          setPropertySettings((prev) => ({ ...prev, ...res.data.property }))
+        if (settingsRes.data.property) {
+          setPropertySettings((prev) => ({ ...prev, ...settingsRes.data.property }))
         }
         // Update maintenance settings
-        if (res.data.maintenance) {
-          setMaintenanceSettings((prev) => ({ ...prev, ...res.data.maintenance }))
+        if (settingsRes.data.maintenance) {
+          setMaintenanceSettings((prev) => ({ ...prev, ...settingsRes.data.maintenance }))
         }
         // Update system settings
-        if (res.data.system) {
-          setSystemSettings((prev) => ({ ...prev, ...res.data.system }))
+        if (settingsRes.data.system) {
+          setSystemSettings((prev) => ({ ...prev, ...settingsRes.data.system }))
         }
+      }
+
+      if (categoriesRes.status && categoriesRes.data?.categories) {
+        setAllCategories(categoriesRes.data.categories)
       }
     } catch (error: any) {
       toast({
@@ -168,8 +192,134 @@ export function AdminSettings() {
     setSystemSettings((prev) => ({ ...prev, [key]: value }))
   }
 
-  const toggleEquipmentCategory = (id: number) => {
-    setEquipmentCategories((prev) => prev.map((cat) => (cat.id === id ? { ...cat, active: !cat.active } : cat)))
+  const handleOpenCategoryModal = (category?: Category) => {
+    if (category) {
+      setEditingCategory(category)
+      setCategoryName(category.name)
+      setCategoryDescription(category.description || "")
+      setCategoryType(category.item_type as "property" | "equipment")
+    } else {
+      setEditingCategory(null)
+      setCategoryName("")
+      setCategoryDescription("")
+      setCategoryType(activeCategoryTab) // Set to current active tab
+    }
+    setShowCategoryModal(true)
+  }
+
+  const handleCloseCategoryModal = () => {
+    setShowCategoryModal(false)
+    setEditingCategory(null)
+    setCategoryName("")
+    setCategoryDescription("")
+    setCategoryType(activeCategoryTab)
+  }
+
+  const handleSaveCategory = async () => {
+    try {
+      if (!categoryName.trim()) {
+        toast({
+          title: "Error",
+          description: "Category name is required",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setSaving("category")
+      
+      if (editingCategory) {
+        // Update existing category
+        const res = await api.updateEquipmentCategory({
+          id: editingCategory.id,
+          name: categoryName,
+          description: categoryDescription || undefined,
+        })
+        
+        if (res.status) {
+          toast({
+            title: "Success",
+            description: "Equipment category updated successfully",
+          })
+          fetchSettings()
+          handleCloseCategoryModal()
+        } else {
+          throw new Error(res.message || "Failed to update category")
+        }
+      } else {
+        // Create new category
+        const res = await api.createEquipmentCategory({
+          name: categoryName,
+          description: categoryDescription || undefined,
+          item_type: categoryType,
+        })
+        
+        if (res.status) {
+          toast({
+            title: "Success",
+            description: "Equipment category created successfully",
+          })
+          fetchSettings()
+          handleCloseCategoryModal()
+        } else {
+          throw new Error(res.message || "Failed to create category")
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save category",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  const toggleEquipmentCategory = async (id: number) => {
+    try {
+      const res = await api.toggleEquipmentCategory(id)
+      if (res.status) {
+        toast({
+          title: "Success",
+          description: "Category status updated",
+        })
+        fetchSettings()
+      } else {
+        throw new Error(res.message || "Failed to toggle category")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to toggle category status",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteCategory = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+      return
+    }
+
+    try {
+      const res = await api.deleteEquipmentCategory(id)
+      if (res.status) {
+        toast({
+          title: "Success",
+          description: "Equipment category deleted successfully",
+        })
+        fetchSettings()
+      } else {
+        throw new Error(res.message || "Failed to delete category")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete category",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -311,14 +461,14 @@ export function AdminSettings() {
         </div>
       </div>
 
-      {/* Equipment Management */}
+      {/* Category Management (Equipment & Property) */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wrench className="h-6 w-6" />
-            <h2 className="text-2xl font-semibold">Equipment Categories</h2>
+            <h2 className="text-2xl font-semibold">Category Management</h2>
           </div>
-          <Button className="gap-2">
+          <Button onClick={() => handleOpenCategoryModal()} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Category
           </Button>
@@ -326,12 +476,39 @@ export function AdminSettings() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Equipment Categories</CardTitle>
-            <CardDescription>Manage equipment categories for property listings</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Categories</CardTitle>
+                <CardDescription>Manage property and equipment categories</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={activeCategoryTab === "property" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategoryTab("property")}
+                >
+                  <Building className="h-4 w-4 mr-2" />
+                  Property
+                </Button>
+                <Button
+                  variant={activeCategoryTab === "equipment" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategoryTab("equipment")}
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Equipment
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {equipmentCategories.map((category) => (
+              {filteredCategories.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No {activeCategoryTab} categories found. Click "Add Category" to create one.
+                </div>
+              ) : (
+                filteredCategories.map((category) => (
                 <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -343,16 +520,22 @@ export function AdminSettings() {
                     <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenCategoryModal(category)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Switch checked={category.active} onCheckedChange={() => toggleEquipmentCategory(category.id)} />
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 bg-transparent">
+                    <Switch checked={Boolean(category.active)} onCheckedChange={() => toggleEquipmentCategory(category.id)} />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-700 bg-transparent"
+                      onClick={() => handleDeleteCategory(category.id, category.name)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -529,6 +712,89 @@ export function AdminSettings() {
           </Button>
         </div>
       </div>
+
+      {/* Category Modal */}
+      <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingCategory ? "Edit Category" : "Add Category"}</DialogTitle>
+            <DialogDescription>
+              {editingCategory
+                ? "Update the details of the category."
+                : "Add a new category for listings."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-type">Category Type *</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={categoryType === "property" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryType("property")}
+                  disabled={!!editingCategory}
+                  className="flex-1"
+                >
+                  <Building className="h-4 w-4 mr-2" />
+                  Property
+                </Button>
+                <Button
+                  type="button"
+                  variant={categoryType === "equipment" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryType("equipment")}
+                  disabled={!!editingCategory}
+                  className="flex-1"
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Equipment
+                </Button>
+              </div>
+              {editingCategory && (
+                <p className="text-xs text-muted-foreground">Category type cannot be changed after creation</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category-name">Category Name *</Label>
+              <Input
+                id="category-name"
+                placeholder={categoryType === "property" ? "e.g., Apartment" : "e.g., Pool Equipment"}
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category-description">Description</Label>
+              <Textarea
+                id="category-description"
+                placeholder="Brief description of the category"
+                value={categoryDescription}
+                onChange={(e) => setCategoryDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseCategoryModal} disabled={saving === "category"}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveCategory} disabled={saving === "category"} className="gap-2">
+              {saving === "category" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {editingCategory ? "Update" : "Create"} Category
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
