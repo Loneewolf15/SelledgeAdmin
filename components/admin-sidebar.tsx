@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Users, Settings, Home, Shield, Building, MapPin, CreditCard } from "lucide-react"
+import { BarChart3, Users, Settings, Home, Shield, Building, MapPin } from "lucide-react"
 import type { AdminView } from "@/components/admin-dashboard"
 
 interface AdminSidebarProps {
@@ -16,7 +16,6 @@ const navigation = [
   { id: "kyc" as AdminView, name: "KYC Requests", icon: Shield },
   { id: "listings" as AdminView, name: "Listings", icon: Building },
   { id: "properties" as AdminView, name: "Properties", icon: MapPin },
-  { id: "subscriptions" as AdminView, name: "Subscriptions", icon: CreditCard },
   { id: "settings" as AdminView, name: "Settings", icon: Settings },
 ]
 

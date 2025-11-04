@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -11,33 +10,6 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ onLogout }: AdminHeaderProps) {
-  const [userName, setUserName] = useState("Admin User")
-  const [userInitials, setUserInitials] = useState("AU")
-
-  useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem("user_data")
-    if (userData) {
-      try {
-        const user = JSON.parse(userData)
-        if (user.name) {
-          setUserName(user.name)
-          // Generate initials from first and last name
-          const nameParts = user.name.trim().split(/\s+/)
-          if (nameParts.length >= 2) {
-            setUserInitials(
-              (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-            )
-          } else if (nameParts.length === 1) {
-            setUserInitials(nameParts[0].substring(0, 2).toUpperCase())
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing user data:", error)
-      }
-    }
-  }, [])
-
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -50,12 +22,10 @@ export function AdminHeader({ onLogout }: AdminHeaderProps) {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 bg-primary/10">
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                {userInitials}
-              </AvatarFallback>
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>AD</AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium">{userName}</span>
+            <span className="text-sm font-medium">Admin User</span>
           </div>
           <Button variant="ghost" size="sm" onClick={onLogout}>
             <LogOut className="h-4 w-4" />

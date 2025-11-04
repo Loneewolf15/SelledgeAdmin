@@ -1,169 +1,199 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, Check, X, Eye, Clock, AlertCircle, RefreshCw, Loader2, Trash2 } from "lucide-react"
+import { Search, Check, X, Eye, Clock, AlertCircle } from "lucide-react"
 import { KycReviewDetail } from "./kyc-review-detail"
 import { RejectionReasonModal } from "./rejection-reason-modal"
-import { api } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
 
 interface KycRequest {
   id: string
-  user_id: string
-  user_name: string
-  user_email: string
-  user_phone?: string
+  userId: string
+  userName: string
+  email: string
   status: "pending" | "approved" | "rejected"
-  id_type: string
-  doc_front_url: string
-  doc_back_url?: string
-  selfie_url?: string
-  rejection_reason?: string
-  reviewed_by?: string
-  created_at: string
-  updated_at: string
+  submittedAt: string
+  documentType: string
+  documentNumber: string
+  avatar?: string
+  personalInfo: {
+    firstName: string
+    lastName: string
+    dateOfBirth: string
+    nationality: string
+    address: {
+      street: string
+      city: string
+      state: string
+      zipCode: string
+      country: string
+    }
+    phoneNumber: string
+  }
+  documents: {
+    frontImage: string
+    backImage?: string
+    selfieImage: string
+  }
+  rejectionReason?: string
 }
 
-interface PaginationData {
-  page: number
-  limit: number
-  total: number
-  pages: number
-}
+const mockKycRequests: KycRequest[] = [
+  {
+    id: "kyc-001",
+    userId: "user-001",
+    userName: "John Smith",
+    email: "john.smith@example.com",
+    status: "pending",
+    submittedAt: "2024-01-15T10:30:00Z",
+    documentType: "Driver's License",
+    documentNumber: "DL123456789",
+    personalInfo: {
+      firstName: "John",
+      lastName: "Smith",
+      dateOfBirth: "1990-05-15",
+      nationality: "United States",
+      address: {
+        street: "123 Main Street",
+        city: "New York",
+        state: "NY",
+        zipCode: "10001",
+        country: "United States",
+      },
+      phoneNumber: "+1 (555) 123-4567",
+    },
+    documents: {
+      frontImage: "/generic-identification-card-front.png",
+      backImage: "/driver-license-back.png",
+      selfieImage: "/diverse-group-selfie.png",
+    },
+  },
+  {
+    id: "kyc-002",
+    userId: "user-002",
+    userName: "Sarah Johnson",
+    email: "sarah.j@example.com",
+    status: "pending",
+    submittedAt: "2024-01-14T14:20:00Z",
+    documentType: "Passport",
+    documentNumber: "P987654321",
+    personalInfo: {
+      firstName: "Sarah",
+      lastName: "Johnson",
+      dateOfBirth: "1985-08-22",
+      nationality: "Canada",
+      address: {
+        street: "456 Oak Avenue",
+        city: "Toronto",
+        state: "ON",
+        zipCode: "M5V 3A8",
+        country: "Canada",
+      },
+      phoneNumber: "+1 (416) 555-0123",
+    },
+    documents: {
+      frontImage: "/passport-photo-page.jpg",
+      selfieImage: "/woman-selfie.png",
+    },
+  },
+  {
+    id: "kyc-003",
+    userId: "user-003",
+    userName: "Mike Davis",
+    email: "mike.davis@example.com",
+    status: "approved",
+    submittedAt: "2024-01-13T09:15:00Z",
+    documentType: "National ID",
+    documentNumber: "ID456789123",
+    personalInfo: {
+      firstName: "Mike",
+      lastName: "Davis",
+      dateOfBirth: "1988-12-03",
+      nationality: "United Kingdom",
+      address: {
+        street: "789 Queen Street",
+        city: "London",
+        state: "England",
+        zipCode: "SW1A 1AA",
+        country: "United Kingdom",
+      },
+      phoneNumber: "+44 20 7946 0958",
+    },
+    documents: {
+      frontImage: "/uk-national-id-front.jpg",
+      backImage: "/uk-national-id-back.jpg",
+      selfieImage: "/man-selfie.jpg",
+    },
+  },
+  {
+    id: "kyc-004",
+    userId: "user-004",
+    userName: "Lisa Wilson",
+    email: "lisa.w@example.com",
+    status: "rejected",
+    submittedAt: "2024-01-12T16:45:00Z",
+    documentType: "Driver's License",
+    documentNumber: "DL987654321",
+    rejectionReason: "Document image quality is too poor to verify. Please resubmit with clearer photos.",
+    personalInfo: {
+      firstName: "Lisa",
+      lastName: "Wilson",
+      dateOfBirth: "1992-03-18",
+      nationality: "Australia",
+      address: {
+        street: "321 Collins Street",
+        city: "Melbourne",
+        state: "VIC",
+        zipCode: "3000",
+        country: "Australia",
+      },
+      phoneNumber: "+61 3 9123 4567",
+    },
+    documents: {
+      frontImage: "/blurry-driver-license.jpg",
+      backImage: "/blurry-license-back.jpg",
+      selfieImage: "/woman-selfie-blurry.jpg",
+    },
+  },
+]
 
 export function KycManagement() {
-  const [requests, setRequests] = useState<KycRequest[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState("")
+  const [requests, setRequests] = useState<KycRequest[]>(mockKycRequests)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all")
   const [selectedRequest, setSelectedRequest] = useState<KycRequest | null>(null)
-  const [pagination, setPagination] = useState<PaginationData>({ page: 1, limit: 20, total: 0, pages: 1 })
   const [rejectionModal, setRejectionModal] = useState<{ isOpen: boolean; requestId: string | null }>({
     isOpen: false,
     requestId: null,
   })
-  const { toast } = useToast()
 
-  const fetchRequests = useCallback(async (skipCache = false) => {
-    try {
-      setLoading(true)
-      setError("")
+  const filteredRequests = requests.filter((request) => {
+    const matchesSearch =
+      request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || request.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
-      const params: any = {
-        page: pagination.page,
-        limit: pagination.limit
-      }
-
-      if (statusFilter !== "all") params.status = statusFilter
-      if (searchTerm) params.search = searchTerm
-
-      console.log('[KYC] Fetching requests with params:', params)
-      const res = await api.getKycRequests(params, skipCache)
-      console.log('[KYC] API Response:', res)
-
-      if (res.status && res.data) {
-        const requestsData = res.data.requests
-        const paginationData = res.data.pagination
-
-        console.log('[KYC] Requests:', requestsData)
-        console.log('[KYC] Pagination:', paginationData)
-
-        if (Array.isArray(requestsData)) {
-          setRequests(requestsData)
-        } else {
-          console.error('[KYC] Requests is not an array:', requestsData)
-          setRequests([])
-        }
-
-        if (paginationData) {
-          setPagination(paginationData)
-        }
-      } else {
-        setError(res.message || "Failed to load KYC requests")
-      }
-    } catch (err: any) {
-      console.error('[KYC] Error:', err)
-      setError(err.message || "Failed to load KYC requests")
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [pagination.page, pagination.limit, statusFilter, searchTerm])
-
-  useEffect(() => {
-    fetchRequests()
-  }, [fetchRequests])
-
-  const handleRefresh = () => {
-    setRefreshing(true)
-    fetchRequests(true)
-  }
-
-  const handleSearch = () => {
-    setPagination({ ...pagination, page: 1 })
-    fetchRequests(true)
-  }
-
-  const handleStatusFilterChange = (status: "all" | "pending" | "approved" | "rejected") => {
-    setStatusFilter(status)
-    setPagination({ ...pagination, page: 1 })
-  }
-
-  const handleApprove = async (requestId: string) => {
-    try {
-      const res = await api.approveKyc(requestId)
-      if (res.status) {
-        toast({ title: "Success", description: "KYC request approved successfully" })
-        fetchRequests(true)
-      } else {
-        throw new Error(res.message || "Failed to approve KYC request")
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to approve KYC request", variant: "destructive" })
-    }
+  const handleApprove = (requestId: string) => {
+    setRequests((prev) => prev.map((req) => (req.id === requestId ? { ...req, status: "approved" as const } : req)))
   }
 
   const handleReject = (requestId: string) => {
     setRejectionModal({ isOpen: true, requestId })
   }
 
-  const handleRejectWithReason = async (requestId: string, reason: string) => {
-    try {
-      const res = await api.rejectKyc(requestId, reason)
-      if (res.status) {
-        toast({ title: "Success", description: "KYC request rejected successfully" })
-        setRejectionModal({ isOpen: false, requestId: null })
-        fetchRequests(true)
-      } else {
-        throw new Error(res.message || "Failed to reject KYC request")
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to reject KYC request", variant: "destructive" })
-    }
-  }
-
-  const handleDelete = async (requestId: string) => {
-    if (!confirm("Are you sure you want to delete this KYC request? This action cannot be undone.")) {
-      return
-    }
-    try {
-      const res = await api.deleteKyc(requestId)
-      if (res.status) {
-        toast({ title: "Success", description: "KYC request deleted successfully" })
-        fetchRequests(true)
-      } else {
-        throw new Error(res.message || "Failed to delete KYC request")
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to delete KYC request", variant: "destructive" })
-    }
+  const handleRejectWithReason = (requestId: string, reason: string) => {
+    setRequests((prev) =>
+      prev.map((req) =>
+        req.id === requestId ? { ...req, status: "rejected" as const, rejectionReason: reason } : req,
+      ),
+    )
+    setRejectionModal({ isOpen: false, requestId: null })
   }
 
   const handleReview = (request: KycRequest) => {
@@ -200,51 +230,12 @@ export function KycManagement() {
     }
   }
 
-  const getInitials = (name: string) => {
-    const nameParts = name.trim().split(/\s+/)
-    if (nameParts.length >= 2) {
-      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-    } else if (nameParts.length === 1) {
-      return nameParts[0].substring(0, 2).toUpperCase()
-    }
-    return "UN"
-  }
-
   const pendingCount = requests.filter((req) => req.status === "pending").length
 
   if (selectedRequest) {
     return (
       <KycReviewDetail
-        request={{
-          id: selectedRequest.id,
-          userId: selectedRequest.user_id,
-          userName: selectedRequest.user_name,
-          email: selectedRequest.user_email,
-          status: selectedRequest.status,
-          submittedAt: selectedRequest.created_at,
-          documentType: selectedRequest.id_type,
-          documentNumber: "",
-          personalInfo: {
-            firstName: selectedRequest.user_name.split(" ")[0] || "",
-            lastName: selectedRequest.user_name.split(" ").slice(1).join(" ") || "",
-            dateOfBirth: "",
-            nationality: "",
-            address: {
-              street: "",
-              city: "",
-              state: "",
-              zipCode: "",
-              country: ""
-            },
-            phoneNumber: selectedRequest.user_phone || ""
-          },
-          documents: {
-            frontImage: selectedRequest.doc_front_url,
-            backImage: selectedRequest.doc_back_url,
-            selfieImage: selectedRequest.selfie_url || ""
-          },
-          rejectionReason: selectedRequest.rejection_reason
-        }}
+        request={selectedRequest}
         onBack={handleBackToList}
         onApprove={() => {
           handleApprove(selectedRequest.id)
@@ -262,27 +253,19 @@ export function KycManagement() {
           <h1 className="text-3xl font-bold">KYC Management</h1>
           <p className="text-muted-foreground">Review and approve user verification requests</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-600" />
-            <span className="text-sm font-medium">{pendingCount} pending requests</span>
-          </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={refreshing}>
-            {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          </Button>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-yellow-600" />
+          <span className="text-sm font-medium">{pendingCount} pending requests</span>
         </div>
       </div>
 
-      <div className="flex gap-4 items-center flex-wrap">
+      <div className="flex gap-4 items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') handleSearch()
-            }}
             className="pl-10"
           />
         </div>
@@ -292,7 +275,7 @@ export function KycManagement() {
               key={status}
               variant={statusFilter === status ? "default" : "outline"}
               size="sm"
-              onClick={() => handleStatusFilterChange(status)}
+              onClick={() => setStatusFilter(status)}
               className="capitalize"
             >
               {status}
@@ -301,21 +284,76 @@ export function KycManagement() {
         </div>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground ml-2">Loading KYC requests...</p>
-        </div>
-      )}
+      <div className="grid gap-4">
+        {filteredRequests.map((request) => (
+          <Card key={request.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src={request.avatar || "/placeholder.svg"} />
+                    <AvatarFallback>
+                      {request.userName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">{request.userName}</h3>
+                    <p className="text-sm text-muted-foreground">{request.email}</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <span>{request.documentType}</span>
+                      <span>•</span>
+                      <span>{request.documentNumber}</span>
+                      <span>•</span>
+                      <span>Submitted {new Date(request.submittedAt).toLocaleDateString()}</span>
+                    </div>
+                    {request.status === "rejected" && request.rejectionReason && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                        <strong>Rejection Reason:</strong> {request.rejectionReason}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {getStatusBadge(request.status)}
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleReview(request)}>
+                      <Eye className="w-4 h-4 mr-1" />
+                      Review
+                    </Button>
+                    {request.status === "pending" && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600 border-green-600 hover:bg-green-50 bg-transparent"
+                          onClick={() => handleApprove(request.id)}
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
+                          onClick={() => handleReject(request.id)}
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {error && !loading && (
-        <div className="flex items-center justify-center h-64 flex-col gap-4">
-          <p className="text-red-600">{error}</p>
-          <Button onClick={() => fetchRequests(true)}>Retry</Button>
-        </div>
-      )}
-
-      {!loading && !error && requests.length === 0 && (
+      {filteredRequests.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -323,79 +361,6 @@ export function KycManagement() {
             <p className="text-muted-foreground">No requests match your current filters.</p>
           </CardContent>
         </Card>
-      )}
-
-      {!loading && !error && requests.length > 0 && (
-        <div className="grid gap-4">
-          {requests.map((request) => (
-            <Card key={request.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarImage src={request.selfie_url || "/placeholder.svg"} />
-                      <AvatarFallback>{getInitials(request.user_name)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{request.user_name}</h3>
-                      <p className="text-sm text-muted-foreground">{request.user_email}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span>{request.id_type}</span>
-                        <span>•</span>
-                        <span>Submitted {new Date(request.created_at).toLocaleDateString()}</span>
-                      </div>
-                      {request.status === "rejected" && request.rejection_reason && (
-                        <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-700 dark:text-red-300">
-                          <strong>Rejection Reason:</strong> {request.rejection_reason}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {getStatusBadge(request.status)}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleReview(request)}>
-                        <Eye className="w-4 h-4 mr-1" />
-                        Review
-                      </Button>
-                      {request.status === "pending" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-green-600 border-green-600 hover:bg-green-50 bg-transparent dark:hover:bg-green-900/20"
-                            onClick={() => handleApprove(request.id)}
-                          >
-                            <Check className="w-4 h-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent dark:hover:bg-red-900/20"
-                            onClick={() => handleReject(request.id)}
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-gray-600 border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/20"
-                        onClick={() => handleDelete(request.id)}
-                        title="Delete KYC Request"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       )}
 
       <RejectionReasonModal

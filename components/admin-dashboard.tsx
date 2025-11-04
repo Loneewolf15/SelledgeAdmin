@@ -10,13 +10,11 @@ import { KycManagement } from "@/components/kyc-management"
 import { ListingManagement } from "@/components/listing-management"
 import { PropertyReviews } from "@/components/property-reviews"
 
-import { SubscriptionManagement } from "@/components/subscription-management"
-
 interface AdminDashboardProps {
   onLogout: () => void
 }
 
-export type AdminView = "overview" | "users" | "kyc" | "listings" | "properties" | "subscriptions" | "settings"
+export type AdminView = "overview" | "users" | "kyc" | "listings" | "properties" | "settings"
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [currentView, setCurrentView] = useState<AdminView>("overview")
@@ -33,8 +31,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return <ListingManagement />
       case "properties":
         return <PropertyReviews />
-      case "subscriptions":
-        return <SubscriptionManagement />
       case "settings":
         return <AdminSettings />
       default:
