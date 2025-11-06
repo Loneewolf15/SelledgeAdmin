@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Search, LogOut } from "lucide-react"
 
+import { Menu } from "lucide-react"
+
 interface AdminHeaderProps {
   onLogout: () => void
+  onToggleSidebar: () => void
 }
 
-export function AdminHeader({ onLogout }: AdminHeaderProps) {
+export function AdminHeader({ onLogout, onToggleSidebar }: AdminHeaderProps) {
   const [userName, setUserName] = useState("Admin User")
   const [userInitials, setUserInitials] = useState("AU")
 
@@ -41,8 +44,11 @@ export function AdminHeader({ onLogout }: AdminHeaderProps) {
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1 max-w-md">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleSidebar}>
+            <Menu className="h-6 w-6" />
+          </Button>
+          <div className="relative flex-1 md:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search..." className="pl-10" />
           </div>

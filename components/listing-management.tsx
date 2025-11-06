@@ -357,7 +357,7 @@ export function ListingManagement() {
               <CardContent className="p-6">
                 <div className="flex gap-4">
                   <img
-                    src={listing.images[0] || "/placeholder.svg"}
+                    src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
                     alt={listing.title}
                     className="w-32 h-24 object-cover rounded-lg"
                   />

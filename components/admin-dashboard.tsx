@@ -1,14 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { AdminSidebar } from "@/components/admin-sidebar"
-import { AdminHeader } from "@/components/admin-header"
+import { AdminLayout } from "@/components/admin-layout"
 import { DashboardOverview } from "@/components/dashboard-overview"
 import { UserManagement } from "@/components/user-management"
-import { AdminSettings } from "@/components/admin-settings"
 import { KycManagement } from "@/components/kyc-management"
 import { ListingManagement } from "@/components/listing-management"
 import { PropertyReviews } from "@/components/property-reviews"
+import { AdminSettings } from "@/components/admin-settings"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -39,14 +38,12 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
-        <AdminSidebar currentView={currentView} onViewChange={setCurrentView} />
-        <div className="flex-1 flex flex-col">
-          <AdminHeader onLogout={onLogout} />
-          <main className="flex-1 p-6">{renderContent()}</main>
-        </div>
-      </div>
-    </div>
+    <AdminLayout
+      currentView={currentView}
+      onViewChange={setCurrentView}
+      onLogout={onLogout}
+    >
+      {renderContent()}
+    </AdminLayout>
   )
 }

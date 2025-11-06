@@ -4,26 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  ArrowLeft,
-  Check,
-  X,
-  MapPin,
-  Calendar,
-  User,
-  Mail,
-  Phone,
-  Bed,
-  Bath,
-  Square,
-  Car,
-  Wifi,
-  Tv,
-  AirVent,
-  Utensils,
-  Dumbbell,
-  Shield,
-} from "lucide-react"
+import { api } from "@/lib/api";
+import { Wifi, AirVent, Utensils, Tv, Dumbbell, Car, Shield, ArrowLeft, Bed, Bath, Square, Mail, Phone, MapPin, Calendar, User, Check, X } from "lucide-react";
 
 interface Listing {
   id: string
@@ -138,7 +120,7 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <img
-                  src={listing.images[0] || "/placeholder.svg"}
+                  src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
                   alt={listing.title}
                   className="w-full h-64 object-cover rounded-lg col-span-2"
                 />

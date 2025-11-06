@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost/selledgez/backend/public";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function getToken() {
   if (typeof window === "undefined") return null;
