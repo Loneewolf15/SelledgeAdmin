@@ -23,6 +23,13 @@ interface KycRequest {
   doc_front_url: string
   doc_back_url?: string
   selfie_url?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  country?: string
+  date_of_birth?: string
+  nationality?: string
+  street_address?: string
   rejection_reason?: string
   reviewed_by?: string
   created_at: string
@@ -73,6 +80,7 @@ export function KycManagement() {
         const paginationData = res.data.pagination
 
         console.log('[KYC] Requests:', requestsData)
+        console.log('[KYC] Requests Data:', res.data)
         console.log('[KYC] Pagination:', paginationData)
 
         if (Array.isArray(requestsData)) {
@@ -227,14 +235,14 @@ export function KycManagement() {
           personalInfo: {
             firstName: selectedRequest.user_name.split(" ")[0] || "",
             lastName: selectedRequest.user_name.split(" ").slice(1).join(" ") || "",
-            dateOfBirth: "",
-            nationality: "",
+            dateOfBirth: selectedRequest.date_of_birth || "",
+            nationality: selectedRequest.nationality || "",
             address: {
-              street: "",
-              city: "",
-              state: "",
-              zipCode: "",
-              country: ""
+              street: selectedRequest.street_address || "",
+              city: selectedRequest.city || "",
+              state: selectedRequest.state || "",
+              zipCode: selectedRequest.postal_code || "",
+              country: selectedRequest.country || ""
             },
             phoneNumber: selectedRequest.user_phone || ""
           },
