@@ -71,15 +71,6 @@ export const api = {
       skipCache
     );
   },
-  getListings(params: Record<string, string | number | undefined> = {}) {
-    const qs = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.set(k, String(v)); });
-    const suffix = qs.toString() ? `?${qs}` : "";
-    return request(`/listings/getAllListings${suffix}`, { method: "GET" });
-  },
-  updateListingStatus(listingId: string, status: string) {
-    return request(`/listings/${listingId}/status`, { method: "PUT", body: JSON.stringify({ status }) });
-  },
   kycList(params: Record<string, string | number | undefined> = {}) {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.set(k, String(v)); });
