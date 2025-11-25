@@ -16,9 +16,11 @@ const navigation = [
   { id: "overview" as AdminView, name: "Overview", icon: Home },
   { id: "users" as AdminView, name: "Users", icon: Users },
   { id: "kyc" as AdminView, name: "KYC Requests", icon: Shield },
+  { id: "company-agents" as AdminView, name: "Company Agents", icon: Building },
   { id: "listings" as AdminView, name: "Listings", icon: Building },
   { id: "properties" as AdminView, name: "Properties", icon: MapPin },
-  { id: "subscriptions" as AdminView, name: "Subscription Management", icon: CreditCard },
+  { id: "subscriptions" as AdminView, name: "Subscription Plans", icon: CreditCard },
+  { id: "user-subscriptions" as AdminView, name: "User Subscriptions", icon: Users },
   { id: "settings" as AdminView, name: "Settings", icon: Settings },
 ]
 
@@ -40,32 +42,32 @@ export function AdminSidebar({ currentView, onViewChange, isOpen, onToggle }: Ad
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <BarChart3 className="h-5 w-5 text-primary-foreground" />
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-lg">Admin Panel</span>
           </div>
-          <span className="font-bold text-lg">Admin Panel</span>
-        </div>
 
-        <nav className="space-y-2">
-          {navigation.map((item) => {
-            const Icon = item.icon
-            return (
-              <Button
-                key={item.id}
-                variant={currentView === item.id ? "secondary" : "ghost"}
-                className={cn("w-full justify-start gap-3", currentView === item.id && "bg-secondary")}
-                onClick={() => onViewChange(item.id)}
-              >
-                <Icon className="h-4 w-4" />
-                {item.name}
-              </Button>
-            )
-          })}
-        </nav>
+          <nav className="space-y-2">
+            {navigation.map((item) => {
+              const Icon = item.icon
+              return (
+                <Button
+                  key={item.id}
+                  variant={currentView === item.id ? "secondary" : "ghost"}
+                  className={cn("w-full justify-start gap-3", currentView === item.id && "bg-secondary")}
+                  onClick={() => onViewChange(item.id)}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.name}
+                </Button>
+              )
+            })}
+          </nav>
+        </div>
       </div>
-    </div>
     </>
   )
 }

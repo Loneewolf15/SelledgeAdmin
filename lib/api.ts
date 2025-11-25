@@ -46,12 +46,20 @@ async function request(path: string, options: RequestInit = {}) {
     headers,
     credentials: "include",
   });
-  
+
   console.log(`[API] Response status: ${res.status} ${res.statusText}`);
-  
-  const data = await res.json().catch(() => ({}));
+
+  const text = await res.text();
+  console.log(`[API] Raw response for ${path}:`, text);
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    console.error(`[API] JSON parse error for ${path}:`, e);
+    data = {};
+  }
   console.log(`[API] Response data for ${path}:`, data);
-  
+
   if (!res.ok) throw new Error(data?.message || "Request failed");
   return data;
 }
@@ -158,7 +166,7 @@ export const api = {
     invalidateCache(["equipment:"]);
     return result;
   },
-  
+
   // User Management
   getUsers(params: { page?: number; limit?: number; search?: string; role?: string } = {}, skipCache = false) {
     const qs = new URLSearchParams();
@@ -181,17 +189,17 @@ export const api = {
     );
   },
   async updateUserRoles(userId: string, roles: string[]) {
-    const result = await request("/usermanagement/updateRoles", { 
-      method: "POST", 
-      body: JSON.stringify({ user_id: userId, roles }) 
+    const result = await request("/usermanagement/updateRoles", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, roles })
     });
     invalidateCache(["users:"]);
     return result;
   },
   async toggleUserStatus(userId: string, status?: boolean) {
-    const result = await request("/usermanagement/toggleStatus", { 
-      method: "POST", 
-      body: JSON.stringify({ user_id: userId, status }) 
+    const result = await request("/usermanagement/toggleStatus", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, status })
     });
     invalidateCache(["users:"]);
     return result;
@@ -349,6 +357,45 @@ export const api = {
       5 * 60 * 1000,
       skipCache
     );
+  },
+
+  // Recent Activity
+  getRecentActivities(params: { filter?: string; page?: number; limit?: number } = {}, skipCache = false) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.set(k, String(v)); });
+    const suffix = qs.toString() ? `?${qs}` : "";
+    const cacheKey = `dashboard:recent_activity:${suffix}`;
+    return cachedRequest(
+      cacheKey,
+      () => request(`/dashboard/recentActivity${suffix}`, { method: "GET" }),
+      1 * 60 * 1000, // Cache for 1 minute
+      skipCache
+    );
+  },
+  // User Subscriptions
+  getUserSubscriptions(params: { page?: number; limit?: number; status?: string; search?: string; expiring_within_days?: number } = {}, skipCache = false) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.set(k, String(v)); });
+    const suffix = qs.toString() ? `?${qs}` : "";
+    const cacheKey = `user_subscriptions:list:${suffix}`;
+    return cachedRequest(
+      cacheKey,
+      () => request(`/subscriptionmanagement/user_subscriptions${suffix}`, { method: "GET" }),
+      2 * 60 * 1000, // Cache for 2 minutes
+      skipCache
+    );
+  },
+  async sendSubscriptionReminder(subscriptionId: string) {
+    return request(`/subscriptionmanagement/send_reminder/${subscriptionId}`, {
+      method: "POST",
+      body: new FormData()
+    });
+  },
+  async deleteUserSubscription(subscriptionId: string) {
+    return request(`/subscriptionmanagement/delete_user_subscription/${subscriptionId}`, {
+      method: "POST",
+      body: new FormData()
+    });
   },
 };
 

@@ -87,6 +87,36 @@ export function UserDetailModal({ isOpen, onClose, user, onUpdateUser }: UserDet
             <Label className="text-right">Last Login</Label>
             <span className="col-span-3">{user.lastLogin}</span>
           </div>
+          
+          {(user.company_name || user.cac_number) && (
+            <>
+              <div className="col-span-4 mt-4 mb-2 border-t pt-4">
+                <h4 className="font-semibold text-sm">Company Information</h4>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Company Name</Label>
+                <span className="col-span-3">{user.company_name}</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">CAC Number</Label>
+                <span className="col-span-3 font-mono">{user.cac_number}</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Address</Label>
+                <span className="col-span-3">{user.office_address || "N/A"}</span>
+              </div>
+              {user.cac_certificate && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Certificate</Label>
+                  <div className="col-span-3">
+                    <Button variant="outline" size="sm" onClick={() => window.open(user.cac_certificate, '_blank')}>
+                      View CAC Certificate
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
         <DialogFooter>
           {isEditing ? (

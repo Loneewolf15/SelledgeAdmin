@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { Wifi, AirVent, Utensils, Tv, Dumbbell, Car, Shield, ArrowLeft, Bed, Bath, Square, Mail, Phone, MapPin, Calendar, User, Check, X } from "lucide-react";
 
 interface Listing {
-  id: string
+  listing_id: string
   title: string
   description: string
   price: number
@@ -24,6 +24,7 @@ interface Listing {
   bathrooms?: number
   area: number
   rejectionReason?: string
+  amenities?: string[]
 }
 
 interface ListingDetailViewProps {
@@ -69,30 +70,16 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
     }
   }
 
-  // Mock additional data for detailed view
-  const mockDetails = {
-    ownerPhone: "+1 (555) 123-4567",
-    yearBuilt: 2018,
-    parkingSpaces: 2,
-    petPolicy: "Pets allowed with deposit",
-    leaseTerms: "12 months minimum",
-    availableFrom: "2024-02-01",
-    amenities: [
-      { icon: Wifi, name: "High-speed Internet" },
-      { icon: AirVent, name: "Central Air Conditioning" },
-      { icon: Utensils, name: "Modern Kitchen" },
-      { icon: Tv, name: "Cable TV Ready" },
-      { icon: Dumbbell, name: "Fitness Center" },
-      { icon: Car, name: "Parking Included" },
-      { icon: Shield, name: "24/7 Security" },
-    ],
-    fullDescription: `${listing.description} This exceptional property offers modern living with premium finishes throughout. The open-concept layout maximizes space and natural light, while high-end appliances and fixtures provide both style and functionality. Located in a prime area with easy access to public transportation, shopping, and dining options.`,
-    additionalImages: [
-      "/modern-apartment-interior.png",
-      "/modern-kitchen.png",
-      "/modern-bathroom-interior.png",
-      "/bedroom-view.jpg",
-    ],
+  const getAmenityIcon = (name: string) => {
+    const normalized = name.toLowerCase()
+    if (normalized.includes("wifi") || normalized.includes("internet")) return Wifi
+    if (normalized.includes("air") || normalized.includes("ac")) return AirVent
+    if (normalized.includes("kitchen") || normalized.includes("cooking")) return Utensils
+    if (normalized.includes("tv") || normalized.includes("cable")) return Tv
+    if (normalized.includes("gym") || normalized.includes("fitness")) return Dumbbell
+    if (normalized.includes("parking") || normalized.includes("garage")) return Car
+    if (normalized.includes("security") || normalized.includes("guard")) return Shield
+    return Check // Default icon
   }
 
   return (
@@ -104,7 +91,7 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold">{listing.title}</h1>
-          <p className="text-muted-foreground">Listing ID: {listing.id}</p>
+          <p className="text-muted-foreground">Listing ID: {listing.listing_id}</p>
         </div>
         {getStatusBadge(listing.status)}
       </div>
@@ -119,19 +106,27 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <img
-                  src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
-                  alt={listing.title}
-                  className="w-full h-64 object-cover rounded-lg col-span-2"
-                />
-                {mockDetails.additionalImages.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image || "/placeholder.svg"}
-                    alt={`Property view ${index + 2}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                ))}
+                {listing.images && listing.images.length > 0 ? (
+                  <>
+                    <img
+                      src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
+                      alt={listing.title}
+                      className="w-full h-64 object-cover rounded-lg col-span-2"
+                    />
+                    {listing.images.slice(1).map((image, index) => (
+                      <img
+                        key={index}
+                        src={`${api.API_BASE_URL}/${image}`}
+                        alt={`Property view ${index + 2}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <div className="col-span-2 h-64 bg-muted flex items-center justify-center rounded-lg">
+                    <p className="text-muted-foreground">No images available</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -164,35 +159,12 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
                     <p className="text-sm text-muted-foreground">Sq Ft</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Car className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-semibold">{mockDetails.parkingSpaces}</p>
-                    <p className="text-sm text-muted-foreground">Parking</p>
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Property Type:</span>
                   <span className="font-medium">{listing.propertyType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Year Built:</span>
-                  <span className="font-medium">{mockDetails.yearBuilt}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Available From:</span>
-                  <span className="font-medium">{new Date(mockDetails.availableFrom).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lease Terms:</span>
-                  <span className="font-medium">{mockDetails.leaseTerms}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pet Policy:</span>
-                  <span className="font-medium">{mockDetails.petPolicy}</span>
                 </div>
               </div>
             </CardContent>
@@ -204,26 +176,31 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">{mockDetails.fullDescription}</p>
+              <p className="text-muted-foreground leading-relaxed">{listing.description}</p>
             </CardContent>
           </Card>
 
-          {/* Amenities */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Amenities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {mockDetails.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <amenity.icon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm">{amenity.name}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Amenities - Conditionally Rendered */}
+          {listing.amenities && listing.amenities.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Amenities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {listing.amenities.map((amenity, index) => {
+                    const Icon = getAmenityIcon(amenity)
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        <Icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{amenity}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -234,20 +211,18 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
               <CardTitle>Pricing</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600 mb-2">${listing.price.toLocaleString()}/month</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">₦{listing.price.toLocaleString()}</div>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Base Rent:</span>
-                  <span>${listing.price.toLocaleString()}</span>
+                  <span>Base Price:</span>
+                  <span>₦{listing.price.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Security Deposit:</span>
-                  <span>${listing.price.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Pet Deposit:</span>
-                  <span>$500</span>
-                </div>
+                {listing.agency_fee_percentage && (
+                  <div className="flex justify-between">
+                    <span>Agency Fee:</span>
+                    <span>{listing.agency_fee_percentage}%</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -277,10 +252,6 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">{listing.ownerEmail}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{mockDetails.ownerPhone}</span>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -294,9 +265,6 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm">{listing.location}</span>
-              </div>
-              <div className="bg-muted rounded-lg h-32 flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Map View</p>
               </div>
             </CardContent>
           </Card>

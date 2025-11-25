@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Check, X, Eye, Clock, Building, MapPin, RefreshCw, Loader2, Trash2 } from "lucide-react"
+import { Search, Check, X, Eye, Clock, Building, MapPin, RefreshCw, Loader2, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { RejectionReasonModal } from "./rejection-reason-modal"
 import { ListingDetailView } from "./listing-detail-view"
 import { api } from "@/lib/api"
@@ -31,6 +31,7 @@ interface Listing {
   status: "pending" | "approved" | "rejected" | "active" | "inactive"
   featured: number
   rejection_reason?: string
+  agency_fee_percentage?: number
   created_at: string
   updated_at: string
   seller_name: string
@@ -190,6 +191,12 @@ export function ListingManagement() {
     setViewingListing(listingId)
   }
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.pages) {
+      setPagination({ ...pagination, page: newPage })
+    }
+  }
+
   const getStatusBadge = (status: Listing["status"]) => {
     switch (status) {
       case "pending":
@@ -263,7 +270,8 @@ export function ListingManagement() {
             bedrooms: listing.bedrooms || 0,
             bathrooms: listing.bathrooms || 0,
             area: listing.size_sqft || 0,
-            rejectionReason: listing.rejection_reason
+            rejectionReason: listing.rejection_reason,
+            agency_fee_percentage: listing.agency_fee_percentage
           }}
           onBack={() => setViewingListing(null)}
           onApprove={() => {
@@ -425,9 +433,9 @@ export function ListingManagement() {
                             </>
                           )}
                           {(listing.status === "active" || listing.status === "inactive") && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleToggleActive(listing.id, listing.status)}
                             >
                               {listing.status === "active" ? "Deactivate" : "Activate"}
@@ -449,6 +457,33 @@ export function ListingManagement() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && !error && listings.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={pagination.page <= 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={pagination.page >= pagination.pages}
+            >
+              Next <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
 

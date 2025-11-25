@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 type SubscriptionPlan = {
   plan_id: string
   plan_name: string
+  target_role: 'seller' | 'vendor' | 'agent' | 'agent-individual' | 'agent-company' | 'all'
   price_monthly: number
   price_yearly: number
   limits: {
@@ -78,6 +79,7 @@ export function SubscriptionManagement() {
     setIsEditing("new")
     setEditedPlan({
       plan_name: "",
+      target_role: "all",
       price_monthly: 0,
       price_yearly: 0,
       limits: {
@@ -196,7 +198,13 @@ export function SubscriptionManagement() {
           </Button>
         </CardTitle>
         <CardDescription>
-          {plan.limits?.max_listings ? `Up to ${plan.limits.max_listings} listings` : 'Custom limits'}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">
+              {plan.target_role === 'all' ? 'All Users' : plan.target_role.charAt(0).toUpperCase() + plan.target_role.slice(1)}
+            </span>
+            <span>•</span>
+            <span>{plan.limits?.max_listings ? `Up to ${plan.limits.max_listings} listings` : 'Custom limits'}</span>
+          </div>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -278,6 +286,26 @@ export function SubscriptionManagement() {
                 onChange={(e) => handleInputChange("plan_name", e.target.value)}
                 placeholder="e.g. Premium Plan" 
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="target_role">Target Role *</Label>
+              <Select 
+                value={editedPlan.target_role || "all"} 
+                onValueChange={(value) => handleInputChange("target_role", value)}
+              >
+                <SelectTrigger id="target_role">
+                  <SelectValue placeholder="Select target role" />
+                </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="seller">Seller</SelectItem>
+                    <SelectItem value="vendor">Vendor</SelectItem>
+                    <SelectItem value="agent">Agent (General)</SelectItem>
+                    <SelectItem value="agent-individual">Agent (Individual)</SelectItem>
+                    <SelectItem value="agent-company">Agent (Company)</SelectItem>
+                  </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

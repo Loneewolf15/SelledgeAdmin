@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, Check, X, Eye, Clock, AlertCircle, RefreshCw, Loader2, Trash2 } from "lucide-react"
+import { Search, Check, X, Eye, Clock, AlertCircle, RefreshCw, Loader2, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { KycReviewDetail } from "./kyc-review-detail"
 import { RejectionReasonModal } from "./rejection-reason-modal"
 import { api } from "@/lib/api"
@@ -180,6 +180,12 @@ export function KycManagement() {
 
   const handleBackToList = () => {
     setSelectedRequest(null)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.pages) {
+      setPagination({ ...pagination, page: newPage })
+    }
   }
 
   const getStatusBadge = (status: KycRequest["status"]) => {
@@ -406,6 +412,37 @@ export function KycManagement() {
         </div>
       )}
 
+
+
+      {/* Pagination Controls */}
+      {
+        !loading && !error && requests.length > 0 && (
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.pages}
+              >
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )
+      }
+
       <RejectionReasonModal
         isOpen={rejectionModal.isOpen}
         onClose={() => setRejectionModal({ isOpen: false, requestId: null })}
@@ -413,6 +450,6 @@ export function KycManagement() {
         title="Reject KYC Request"
         description="Please provide a reason for rejecting this KYC request. This will help the user understand what needs to be corrected."
       />
-    </div>
+    </div >
   )
 }
