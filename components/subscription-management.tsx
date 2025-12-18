@@ -22,7 +22,7 @@ type SubscriptionPlan = {
     max_photos?: number
     featured_listings?: number
     boosts_per_month?: number
-    property_requests_per_month?: number
+    max_property_requests_per_month?: number
     listing_duration_days?: number
     [key: string]: any
   }
@@ -387,12 +387,12 @@ export function SubscriptionManagement() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="property_requests_per_month">Requests/Month</Label>
+                  <Label htmlFor="max_property_requests_per_month">Requests/Month</Label>
                   <Input
-                    id="property_requests_per_month"
+                    id="max_property_requests_per_month"
                     type="number"
-                    value={editedPlan.limits?.property_requests_per_month || 0}
-                    onChange={(e) => handleLimitChange("property_requests_per_month", parseInt(e.target.value) || 0)}
+                    value={editedPlan.limits?.max_property_requests_per_month || 0}
+                    onChange={(e) => handleLimitChange("max_property_requests_per_month", parseInt(e.target.value) || 0)}
                   />
                 </div>
                 <div className="space-y-2">
