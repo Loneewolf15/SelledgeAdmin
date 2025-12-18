@@ -59,8 +59,8 @@ export function CompanyAgentsView() {
         setRequests(data.data.requests)
       }
     } catch (error) {
-      console.error("Failed to fetch company agent requests:", error)
-      toast.error("Failed to load company agent requests")
+      console.error("Failed to fetch corporate agent requests:", error)
+      toast.error("Failed to load corporate agent requests")
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export function CompanyAgentsView() {
 
       const data = await response.json()
       if (data.status) {
-        toast.success("Company agent approved successfully")
+        toast.success("Corporate agent approved successfully")
         fetchRequests()
         setSelectedRequest(null)
       } else {
@@ -120,7 +120,7 @@ export function CompanyAgentsView() {
 
       const data = await response.json()
       if (data.status) {
-        toast.success("Company agent rejected")
+        toast.success("Corporate agent rejected")
         fetchRequests()
         setSelectedRequest(null)
         setShowRejectDialog(false)
@@ -152,8 +152,8 @@ export function CompanyAgentsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Company Agent Verification</h2>
-        <p className="text-muted-foreground">Review and verify company agent registration requests</p>
+        <h2 className="text-3xl font-bold tracking-tight">Corporate Agent Verification</h2>
+        <p className="text-muted-foreground">Review and verify corporate agent registration requests</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -173,7 +173,7 @@ export function CompanyAgentsView() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No company agent requests found</p>
+                <p className="text-muted-foreground">No corporate agent requests found</p>
               </CardContent>
             </Card>
           ) : (
@@ -281,9 +281,9 @@ export function CompanyAgentsView() {
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Company Agent Request</DialogTitle>
+            <DialogTitle>Reject Corporate Agent Request</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting this company agent registration.
+              Please provide a reason for rejecting this corporate agent registration.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

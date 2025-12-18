@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Trash2, Plus, RefreshCw, Check } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
@@ -20,6 +21,9 @@ type SubscriptionPlan = {
     max_listings?: number
     max_photos?: number
     featured_listings?: number
+    boosts_per_month?: number
+    property_requests_per_month?: number
+    listing_duration_days?: number
     [key: string]: any
   }
   features: string[]
@@ -70,7 +74,7 @@ export function SubscriptionManagement() {
 
   const handleEdit = (plan: SubscriptionPlan) => {
     setIsEditing(plan.plan_id)
-    setEditedPlan({...plan})
+    setEditedPlan({ ...plan })
     setIsCreating(false)
   }
 
@@ -85,7 +89,10 @@ export function SubscriptionManagement() {
       limits: {
         max_listings: 10,
         max_photos: 5,
-        featured_listings: 0
+        featured_listings: 0,
+        boosts_per_month: 0,
+        property_requests_per_month: 0,
+        listing_duration_days: 30
       },
       features: []
     })
@@ -188,6 +195,15 @@ export function SubscriptionManagement() {
     setEditedPlan((prev) => ({ ...prev, features: newFeatures }))
   }
 
+  const toggleFeature = (feature: string) => {
+    const features = editedPlan.features || []
+    if (features.includes(feature)) {
+      setEditedPlan(prev => ({ ...prev, features: features.filter(f => f !== feature) }))
+    } else {
+      setEditedPlan(prev => ({ ...prev, features: [...features, feature] }))
+    }
+  }
+
   const renderPlanCard = (plan: SubscriptionPlan) => (
     <Card key={plan.plan_id} className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -224,7 +240,7 @@ export function SubscriptionManagement() {
             </div>
           )}
         </div>
-        
+
         <div className="space-y-2 mb-4">
           <p className="text-sm font-semibold text-muted-foreground">Limits:</p>
           <ul className="text-sm space-y-1">
@@ -280,53 +296,53 @@ export function SubscriptionManagement() {
           <CardContent className="grid gap-4 max-h-[70vh] overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="plan_name">Plan Name *</Label>
-              <Input 
-                id="plan_name" 
-                value={editedPlan.plan_name || ""} 
+              <Input
+                id="plan_name"
+                value={editedPlan.plan_name || ""}
                 onChange={(e) => handleInputChange("plan_name", e.target.value)}
-                placeholder="e.g. Premium Plan" 
+                placeholder="e.g. Premium Plan"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="target_role">Target Role *</Label>
-              <Select 
-                value={editedPlan.target_role || "all"} 
+              <Select
+                value={editedPlan.target_role || "all"}
                 onValueChange={(value) => handleInputChange("target_role", value)}
               >
                 <SelectTrigger id="target_role">
                   <SelectValue placeholder="Select target role" />
                 </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="seller">Seller</SelectItem>
-                    <SelectItem value="vendor">Vendor</SelectItem>
-                    <SelectItem value="agent">Agent (General)</SelectItem>
-                    <SelectItem value="agent-individual">Agent (Individual)</SelectItem>
-                    <SelectItem value="agent-company">Agent (Company)</SelectItem>
-                  </SelectContent>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="seller">Seller</SelectItem>
+                  <SelectItem value="vendor">Vendor</SelectItem>
+                  <SelectItem value="agent">Agent (General)</SelectItem>
+                  <SelectItem value="agent-individual">Agent (Individual)</SelectItem>
+                  <SelectItem value="agent-company">Agent (Company)</SelectItem>
+                </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price_monthly">Monthly Price (₦) *</Label>
-                <Input 
-                  id="price_monthly" 
-                  type="number" 
+                <Input
+                  id="price_monthly"
+                  type="number"
                   step="0.01"
-                  value={editedPlan.price_monthly || ""} 
-                  onChange={(e) => handleInputChange("price_monthly", parseFloat(e.target.value) || 0)} 
+                  value={editedPlan.price_monthly || ""}
+                  onChange={(e) => handleInputChange("price_monthly", parseFloat(e.target.value) || 0)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price_yearly">Yearly Price (₦)</Label>
-                <Input 
-                  id="price_yearly" 
-                  type="number" 
+                <Input
+                  id="price_yearly"
+                  type="number"
                   step="0.01"
-                  value={editedPlan.price_yearly || ""} 
-                  onChange={(e) => handleInputChange("price_yearly", parseFloat(e.target.value) || 0)} 
+                  value={editedPlan.price_yearly || ""}
+                  onChange={(e) => handleInputChange("price_yearly", parseFloat(e.target.value) || 0)}
                 />
               </div>
             </div>
@@ -336,29 +352,56 @@ export function SubscriptionManagement() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="max_listings">Max Listings</Label>
-                  <Input 
-                    id="max_listings" 
-                    type="number" 
-                    value={editedPlan.limits?.max_listings || 0} 
-                    onChange={(e) => handleLimitChange("max_listings", parseInt(e.target.value) || 0)} 
+                  <Input
+                    id="max_listings"
+                    type="number"
+                    value={editedPlan.limits?.max_listings || 0}
+                    onChange={(e) => handleLimitChange("max_listings", parseInt(e.target.value) || 0)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="max_photos">Max Photos</Label>
-                  <Input 
-                    id="max_photos" 
-                    type="number" 
-                    value={editedPlan.limits?.max_photos || 0} 
-                    onChange={(e) => handleLimitChange("max_photos", parseInt(e.target.value) || 0)} 
+                  <Input
+                    id="max_photos"
+                    type="number"
+                    value={editedPlan.limits?.max_photos || 0}
+                    onChange={(e) => handleLimitChange("max_photos", parseInt(e.target.value) || 0)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="featured_listings">Featured Listings</Label>
-                  <Input 
-                    id="featured_listings" 
-                    type="number" 
-                    value={editedPlan.limits?.featured_listings || 0} 
-                    onChange={(e) => handleLimitChange("featured_listings", parseInt(e.target.value) || 0)} 
+                  <Input
+                    id="featured_listings"
+                    type="number"
+                    value={editedPlan.limits?.featured_listings || 0}
+                    onChange={(e) => handleLimitChange("featured_listings", parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="boosts_per_month">Boosts/Month</Label>
+                  <Input
+                    id="boosts_per_month"
+                    type="number"
+                    value={editedPlan.limits?.boosts_per_month || 0}
+                    onChange={(e) => handleLimitChange("boosts_per_month", parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="property_requests_per_month">Requests/Month</Label>
+                  <Input
+                    id="property_requests_per_month"
+                    type="number"
+                    value={editedPlan.limits?.property_requests_per_month || 0}
+                    onChange={(e) => handleLimitChange("property_requests_per_month", parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="listing_duration_days">Listing Duration (Days)</Label>
+                  <Input
+                    id="listing_duration_days"
+                    type="number"
+                    value={editedPlan.limits?.listing_duration_days || 30}
+                    onChange={(e) => handleLimitChange("listing_duration_days", parseInt(e.target.value) || 0)}
                   />
                 </div>
               </div>
@@ -366,12 +409,20 @@ export function SubscriptionManagement() {
 
             <div className="space-y-2">
               <Label className="text-base font-semibold">Features</Label>
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="can_boost"
+                  checked={editedPlan.features?.includes('can_boost')}
+                  onCheckedChange={() => toggleFeature('can_boost')}
+                />
+                <Label htmlFor="can_boost">Allow Boosting</Label>
+              </div>
               {editedPlan.features?.map((feature, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <Input 
-                    value={feature} 
+                  <Input
+                    value={feature}
                     onChange={(e) => handleFeatureChange(index, e.target.value)}
-                    placeholder="Enter feature description" 
+                    placeholder="Enter feature description"
                   />
                   <Button variant="ghost" size="icon" onClick={() => removeFeature(index)}>
                     <Trash2 className="w-4 h-4" />
@@ -427,7 +478,7 @@ export function SubscriptionManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map(renderPlanCard)}
-        
+
         <Card className="border-dashed hover:shadow-lg transition-shadow cursor-pointer" onClick={handleCreate}>
           <CardHeader>
             <CardTitle className="text-center">Create New Plan</CardTitle>
@@ -438,7 +489,7 @@ export function SubscriptionManagement() {
           </CardContent>
         </Card>
       </div>
-      
+
       {renderEditForm()}
     </div>
   )

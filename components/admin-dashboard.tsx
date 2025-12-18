@@ -11,12 +11,13 @@ import { AdminSettings } from "@/components/admin-settings"
 import { SubscriptionManagement } from "@/components/subscription-management"
 import UserSubscriptionsPage from "@/app/user-subscriptions/page"
 import { CompanyAgentsView } from "@/components/company-agents-view"
+import { PropertyRequestsManagement } from "@/components/property-requests-management"
 
 interface AdminDashboardProps {
   onLogout: () => void
 }
 
-export type AdminView = "overview" | "users" | "kyc" | "listings" | "properties" | "settings" | "subscriptions" | "user-subscriptions" | "company-agents"
+export type AdminView = "overview" | "users" | "kyc" | "listings" | "properties" | "settings" | "subscriptions" | "user-subscriptions" | "company-agents" | "property-requests"
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [currentView, setCurrentView] = useState<AdminView>("overview")
@@ -41,6 +42,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return <UserSubscriptionsPage />
       case "company-agents":
         return <CompanyAgentsView />
+      case "property-requests":
+        return <PropertyRequestsManagement />
       default:
         return <DashboardOverview />
     }

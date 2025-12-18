@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Save, Building, Wrench, DollarSign, Shield, Bell, Settings, Plus, Trash2, Edit, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { BoostTiersManagement } from "./boost-tiers-management"
 
 interface Category {
   id: number
@@ -81,7 +82,7 @@ export function AdminSettings() {
         api.getSettingsGrouped(),
         api.getEquipmentCategories()
       ])
-      
+
       if (settingsRes.status && settingsRes.data) {
         // Update property settings
         if (settingsRes.data.property) {
@@ -227,7 +228,7 @@ export function AdminSettings() {
       }
 
       setSaving("category")
-      
+
       if (editingCategory) {
         // Update existing category
         const res = await api.updateEquipmentCategory({
@@ -235,7 +236,7 @@ export function AdminSettings() {
           name: categoryName,
           description: categoryDescription || undefined,
         })
-        
+
         if (res.status) {
           toast({
             title: "Success",
@@ -253,7 +254,7 @@ export function AdminSettings() {
           description: categoryDescription || undefined,
           item_type: categoryType,
         })
-        
+
         if (res.status) {
           toast({
             title: "Success",
@@ -509,32 +510,32 @@ export function AdminSettings() {
                 </div>
               ) : (
                 filteredCategories.map((category) => (
-                <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold">{category.name}</h3>
-                      <Badge variant={category.active ? "default" : "secondary"}>
-                        {category.active ? "Active" : "Inactive"}
-                      </Badge>
+                  <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-semibold">{category.name}</h3>
+                        <Badge variant={category.active ? "default" : "secondary"}>
+                          {category.active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenCategoryModal(category)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Switch checked={Boolean(category.active)} onCheckedChange={() => toggleEquipmentCategory(category.id)} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 bg-transparent"
+                        onClick={() => handleDeleteCategory(category.id, category.name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenCategoryModal(category)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Switch checked={Boolean(category.active)} onCheckedChange={() => toggleEquipmentCategory(category.id)} />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-red-600 hover:text-red-700 bg-transparent"
-                      onClick={() => handleDeleteCategory(category.id, category.name)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
+                ))
               )}
             </div>
           </CardContent>
@@ -713,6 +714,10 @@ export function AdminSettings() {
         </div>
       </div>
 
+
+      {/* Boost Tiers Management */}
+      <BoostTiersManagement />
+
       {/* Category Modal */}
       <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
         <DialogContent className="sm:max-w-[500px]">
@@ -795,6 +800,6 @@ export function AdminSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   )
 }
