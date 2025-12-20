@@ -360,7 +360,7 @@ export function AdminSettings() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="minPrice">Minimum Listing Price ($)</Label>
+                  <Label htmlFor="minPrice">Minimum Listing Price (₦)</Label>
                   <Input
                     id="minPrice"
                     type="number"
@@ -369,7 +369,7 @@ export function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maxPrice">Maximum Listing Price ($)</Label>
+                  <Label htmlFor="maxPrice">Maximum Listing Price (₦)</Label>
                   <Input
                     id="maxPrice"
                     type="number"
@@ -379,7 +379,7 @@ export function AdminSettings() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="autoApproval">Auto-Approval Threshold ($)</Label>
+                <Label htmlFor="autoApproval">Auto-Approval Threshold (₦)</Label>
                 <Input
                   id="autoApproval"
                   type="number"

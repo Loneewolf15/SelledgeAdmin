@@ -16,6 +16,8 @@ type SubscriptionPlan = {
   plan_name: string
   target_role: 'seller' | 'vendor' | 'agent' | 'agent-individual' | 'agent-company' | 'all'
   price_monthly: number
+  price_quarterly: number
+  price_biannual: number
   price_yearly: number
   limits: {
     max_listings?: number
@@ -85,6 +87,8 @@ export function SubscriptionManagement() {
       plan_name: "",
       target_role: "all",
       price_monthly: 0,
+      price_quarterly: 0,
+      price_biannual: 0,
       price_yearly: 0,
       limits: {
         max_listings: 10,
@@ -239,6 +243,16 @@ export function SubscriptionManagement() {
               )}
             </div>
           )}
+          {plan.price_quarterly > 0 && (
+            <div className="text-sm text-muted">
+              ₦{Number(plan.price_quarterly).toLocaleString()}/quarter
+            </div>
+          )}
+          {plan.price_biannual > 0 && (
+            <div className="text-sm text-muted">
+              ₦{Number(plan.price_biannual).toLocaleString()}/6mo
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 mb-4">
@@ -343,6 +357,29 @@ export function SubscriptionManagement() {
                   step="0.01"
                   value={editedPlan.price_yearly || ""}
                   onChange={(e) => handleInputChange("price_yearly", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price_quarterly">Quarterly Price (₦)</Label>
+                <Input
+                  id="price_quarterly"
+                  type="number"
+                  step="0.01"
+                  value={editedPlan.price_quarterly || ""}
+                  onChange={(e) => handleInputChange("price_quarterly", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price_biannual">Biannual Price (₦)</Label>
+                <Input
+                  id="price_biannual"
+                  type="number"
+                  step="0.01"
+                  value={editedPlan.price_biannual || ""}
+                  onChange={(e) => handleInputChange("price_biannual", parseFloat(e.target.value) || 0)}
                 />
               </div>
             </div>

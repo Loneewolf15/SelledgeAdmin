@@ -121,7 +121,7 @@ export function DashboardOverview() {
     },
     {
       title: "Total Revenue",
-      value: "$" + stats.total_revenue.toLocaleString(),
+      value: "₦" + stats.total_revenue.toLocaleString(),
       icon: DollarSign,
       description: "this month",
     },

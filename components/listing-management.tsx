@@ -10,6 +10,7 @@ import { Search, Check, X, Eye, Clock, Building, MapPin, RefreshCw, Loader2, Tra
 import { RejectionReasonModal } from "./rejection-reason-modal"
 import { ListingDetailView } from "./listing-detail-view"
 import { api } from "@/lib/api"
+import { getImageUrl } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface Listing {
@@ -365,7 +366,7 @@ export function ListingManagement() {
               <CardContent className="p-6">
                 <div className="flex gap-4">
                   <img
-                    src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
+                    src={getImageUrl(listing.images[0])}
                     alt={listing.title}
                     className="w-32 h-24 object-cover rounded-lg"
                   />

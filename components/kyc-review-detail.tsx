@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check, X, User, FileText, MapPin, Phone, Calendar, Globe } from "lucide-react"
 
 // Base URL for backend uploads
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost/selledgez/backend/public"
+// Base URL handled inside getImageUrl
 
 interface KycRequest {
   id: string
@@ -50,19 +50,13 @@ interface KycReviewDetailProps {
 
 export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycReviewDetailProps) {
   // Helper function to construct full image URL
+  // Helper function to construct full image URL
   const getImageUrl = (imagePath: string | undefined) => {
     if (!imagePath) return "/placeholder.svg"
-    
-    // If already a full URL, return as is
-    if (imagePath.startsWith("http")) return imagePath
-    
-    // If it's a relative path starting with /, construct full URL
-    if (imagePath.startsWith("/")) {
-      return `${BASE_URL}${imagePath}`
-    }
-    
-    // Otherwise, assume it's from uploads/kyc/{kycId}/
-    return `${BASE_URL}/uploads/kyc/${request.id}/${imagePath}`
+    if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath
+
+    // logic from listing-card.tsx
+    return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost/selledgez/backend/public"}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`
   }
 
   const getStatusBadge = (status: KycRequest["status"]) => {
@@ -117,7 +111,13 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src={request.avatar || "/placeholder.svg"} />
+                  <AvatarImage
+                    src={getImageUrl(request.documents.selfieImage) || request.avatar || "/placeholder.svg"}
+                    alt={request.userName}
+                    onError={(e) => {
+                      console.log('[KYC Avatar] Failed to load:', e.currentTarget.src);
+                    }}
+                  />
                   <AvatarFallback className="text-lg">
                     {request.userName
                       .split(" ")
@@ -138,7 +138,11 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Date of Birth</p>
-                    <p className="font-medium">{new Date(request.personalInfo.dateOfBirth).toLocaleDateString()}</p>
+                    <p className="font-medium">
+                      {request.personalInfo.dateOfBirth && !isNaN(new Date(request.personalInfo.dateOfBirth).getTime())
+                        ? new Date(request.personalInfo.dateOfBirth).toLocaleDateString()
+                        : "Not provided"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -214,6 +218,7 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
                   alt="Document front"
                   className="w-full rounded-lg border"
                   onError={(e) => {
+                    console.error('[KYC Image] Failed to load front image:', e.currentTarget.src);
                     e.currentTarget.src = "/placeholder.svg"
                   }}
                 />
@@ -227,6 +232,7 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
                     alt="Document back"
                     className="w-full rounded-lg border"
                     onError={(e) => {
+                      console.error('[KYC Image] Failed to load back image:', e.currentTarget.src);
                       e.currentTarget.src = "/placeholder.svg"
                     }}
                   />
@@ -240,6 +246,7 @@ export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycRev
                   alt="Selfie verification"
                   className="w-full rounded-lg border"
                   onError={(e) => {
+                    console.error('[KYC Image] Failed to load selfie image:', e.currentTarget.src);
                     e.currentTarget.src = "/placeholder.svg"
                   }}
                 />

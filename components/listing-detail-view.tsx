@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { api } from "@/lib/api";
+import { getImageUrl } from "@/lib/image-utils";
 import { Wifi, AirVent, Utensils, Tv, Dumbbell, Car, Shield, ArrowLeft, Bed, Bath, Square, Mail, Phone, MapPin, Calendar, User, Check, X } from "lucide-react";
 
 interface Listing {
@@ -109,14 +110,14 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
                 {listing.images && listing.images.length > 0 ? (
                   <>
                     <img
-                      src={listing.images[0] ? `${api.API_BASE_URL}/${listing.images[0]}` : "/placeholder.svg"}
+                      src={getImageUrl(listing.images[0])}
                       alt={listing.title}
                       className="w-full h-64 object-cover rounded-lg col-span-2"
                     />
                     {listing.images.slice(1).map((image, index) => (
                       <img
                         key={index}
-                        src={`${api.API_BASE_URL}/${image}`}
+                        src={getImageUrl(image)}
                         alt={`Property view ${index + 2}`}
                         className="w-full h-32 object-cover rounded-lg"
                       />
