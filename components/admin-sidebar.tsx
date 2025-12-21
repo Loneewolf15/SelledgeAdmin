@@ -18,7 +18,7 @@ const navigation = [
   { id: "kyc" as AdminView, name: "KYC Requests", icon: Shield },
   { id: "company-agents" as AdminView, name: "Corporate Agents", icon: Building },
   { id: "listings" as AdminView, name: "Listings", icon: Building },
-  { id: "properties" as AdminView, name: "Properties", icon: MapPin },
+  // { id: "properties" as AdminView, name: "Properties", icon: MapPin },
   { id: "property-requests" as AdminView, name: "Property Requests", icon: MessageSquare },
   { id: "subscriptions" as AdminView, name: "Subscription Plans", icon: CreditCard },
   { id: "user-subscriptions" as AdminView, name: "User Subscriptions", icon: Users },

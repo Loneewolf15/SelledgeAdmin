@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check, X, User, FileText, MapPin, Phone, Calendar, Globe } from "lucide-react"
-
-// Base URL for backend uploads
-// Base URL handled inside getImageUrl
+import { getImageUrl } from "@/lib/image-utils"
 
 interface KycRequest {
   id: string
@@ -49,15 +47,7 @@ interface KycReviewDetailProps {
 }
 
 export function KycReviewDetail({ request, onBack, onApprove, onReject }: KycReviewDetailProps) {
-  // Helper function to construct full image URL
-  // Helper function to construct full image URL
-  const getImageUrl = (imagePath: string | undefined) => {
-    if (!imagePath) return "/placeholder.svg"
-    if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath
 
-    // logic from listing-card.tsx
-    return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost/selledgez/backend/public"}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`
-  }
 
   const getStatusBadge = (status: KycRequest["status"]) => {
     switch (status) {

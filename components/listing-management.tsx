@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 
 interface Listing {
   id: string
+  listing_id: string
   seller_id: string
   title: string
   description: string
@@ -38,6 +39,7 @@ interface Listing {
   seller_name: string
   seller_email: string
   images: string[]
+  amenities?: string[]
 }
 
 interface PaginationData {
@@ -256,6 +258,7 @@ export function ListingManagement() {
       return (
         <ListingDetailView
           listing={{
+            listing_id: listing.id,
             id: listing.id,
             title: listing.title,
             description: listing.description,
@@ -272,6 +275,7 @@ export function ListingManagement() {
             bathrooms: listing.bathrooms || 0,
             area: listing.size_sqft || 0,
             rejectionReason: listing.rejection_reason,
+            amenities: listing.amenities || [],
             agency_fee_percentage: listing.agency_fee_percentage
           }}
           onBack={() => setViewingListing(null)}
@@ -374,6 +378,7 @@ export function ListingManagement() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-semibold text-lg">{listing.title}</h3>
+                        <p className="text-xs text-muted-foreground mb-1">ID: {listing.listing_id}</p>
                         <p className="text-muted-foreground text-sm mb-2 line-clamp-2">{listing.description}</p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2 flex-wrap">
                           <div className="flex items-center gap-1">
@@ -417,7 +422,7 @@ export function ListingManagement() {
                                 variant="outline"
                                 size="sm"
                                 className="text-green-600 border-green-600 hover:bg-green-50 bg-transparent dark:hover:bg-green-900/20"
-                                onClick={() => handleApprove(listing.id)}
+                                onClick={() => handleApprove(listing.listing_id)}
                               >
                                 <Check className="w-4 h-4 mr-1" />
                                 Approve
@@ -426,7 +431,7 @@ export function ListingManagement() {
                                 variant="outline"
                                 size="sm"
                                 className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent dark:hover:bg-red-900/20"
-                                onClick={() => handleReject(listing.id)}
+                                onClick={() => handleReject(listing.listing_id)}
                               >
                                 <X className="w-4 h-4 mr-1" />
                                 Reject
