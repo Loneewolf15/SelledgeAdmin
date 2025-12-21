@@ -38,6 +38,7 @@ interface Listing {
   updated_at: string
   seller_name: string
   seller_email: string
+  seller_profile_image?: string
   images: string[]
   amenities?: string[]
 }
@@ -256,35 +257,45 @@ export function ListingManagement() {
     const listing = listings.find((l) => l.id === viewingListing)
     if (listing) {
       return (
-        <ListingDetailView
-          listing={{
-            listing_id: listing.id,
-            id: listing.id,
-            title: listing.title,
-            description: listing.description,
-            price: parseFloat(listing.price),
-            location: `${listing.city}, ${listing.state}`,
-            status: listing.status,
-            createdAt: listing.created_at,
-            ownerId: listing.seller_id,
-            ownerName: listing.seller_name,
-            ownerEmail: listing.seller_email,
-            images: listing.images,
-            propertyType: listing.listing_type,
-            bedrooms: listing.bedrooms || 0,
-            bathrooms: listing.bathrooms || 0,
-            area: listing.size_sqft || 0,
-            rejectionReason: listing.rejection_reason,
-            amenities: listing.amenities || [],
-            agency_fee_percentage: listing.agency_fee_percentage
-          }}
-          onBack={() => setViewingListing(null)}
-          onApprove={() => {
-            handleApprove(viewingListing)
-            setViewingListing(null)
-          }}
-          onReject={() => handleReject(viewingListing)}
-        />
+        <>
+          <ListingDetailView
+            listing={{
+              listing_id: listing.id,
+              id: listing.id,
+              title: listing.title,
+              description: listing.description,
+              price: parseFloat(listing.price),
+              location: `${listing.city}, ${listing.state}`,
+              status: listing.status,
+              createdAt: listing.created_at,
+              ownerId: listing.seller_id,
+              ownerName: listing.seller_name,
+              ownerEmail: listing.seller_email,
+              ownerProfileImage: listing.seller_profile_image,
+              images: listing.images,
+              propertyType: listing.listing_type,
+              bedrooms: listing.bedrooms || 0,
+              bathrooms: listing.bathrooms || 0,
+              area: listing.size_sqft || 0,
+              rejectionReason: listing.rejection_reason,
+              amenities: listing.amenities || [],
+              agency_fee_percentage: listing.agency_fee_percentage
+            }}
+            onBack={() => setViewingListing(null)}
+            onApprove={() => {
+              handleApprove(viewingListing)
+              setViewingListing(null)
+            }}
+            onReject={() => handleReject(viewingListing)}
+          />
+          <RejectionReasonModal
+            isOpen={rejectionModal.isOpen}
+            onClose={() => setRejectionModal({ isOpen: false, listingId: null })}
+            onSubmit={(reason) => rejectionModal.listingId && handleRejectWithReason(rejectionModal.listingId, reason)}
+            title="Reject Listing"
+            description="Please provide a reason for rejecting this listing. This will help the property owner understand what needs to be corrected."
+          />
+        </>
       )
     }
   }

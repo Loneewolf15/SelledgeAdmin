@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/image-utils";
 import { Wifi, AirVent, Utensils, Tv, Dumbbell, Car, Shield, ArrowLeft, Bed, Bath, Square, Mail, Phone, MapPin, Calendar, User, Check, X } from "lucide-react";
@@ -19,6 +19,7 @@ interface Listing {
   ownerId: string
   ownerName: string
   ownerEmail: string
+  ownerProfileImage?: string
   images: string[]
   propertyType: string
   bedrooms?: number
@@ -26,6 +27,7 @@ interface Listing {
   area: number
   rejectionReason?: string
   amenities?: string[]
+  agency_fee_percentage?: number
 }
 
 interface ListingDetailViewProps {
@@ -236,6 +238,7 @@ export function ListingDetailView({ listing, onBack, onApprove, onReject }: List
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <Avatar className="w-12 h-12">
+                  <AvatarImage src={getImageUrl(listing.ownerProfileImage)} />
                   <AvatarFallback>
                     {listing.ownerName
                       .split(" ")

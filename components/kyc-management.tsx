@@ -228,44 +228,53 @@ export function KycManagement() {
 
   if (selectedRequest) {
     return (
-      <KycReviewDetail
-        request={{
-          id: selectedRequest.id,
-          userId: selectedRequest.user_id,
-          userName: selectedRequest.user_name,
-          email: selectedRequest.user_email,
-          status: selectedRequest.status,
-          submittedAt: selectedRequest.created_at,
-          documentType: selectedRequest.id_type,
-          documentNumber: "",
-          personalInfo: {
-            firstName: selectedRequest.user_name.split(" ")[0] || "",
-            lastName: selectedRequest.user_name.split(" ").slice(1).join(" ") || "",
-            dateOfBirth: selectedRequest.date_of_birth || "",
-            nationality: selectedRequest.nationality || "",
-            address: {
-              street: selectedRequest.street_address || "",
-              city: selectedRequest.city || "",
-              state: selectedRequest.state || "",
-              zipCode: selectedRequest.postal_code || "",
-              country: selectedRequest.country || ""
+      <>
+        <KycReviewDetail
+          request={{
+            id: selectedRequest.id,
+            userId: selectedRequest.user_id,
+            userName: selectedRequest.user_name,
+            email: selectedRequest.user_email,
+            status: selectedRequest.status,
+            submittedAt: selectedRequest.created_at,
+            documentType: selectedRequest.id_type,
+            documentNumber: "",
+            personalInfo: {
+              firstName: selectedRequest.user_name.split(" ")[0] || "",
+              lastName: selectedRequest.user_name.split(" ").slice(1).join(" ") || "",
+              dateOfBirth: selectedRequest.date_of_birth || "",
+              nationality: selectedRequest.nationality || "",
+              address: {
+                street: selectedRequest.street_address || "",
+                city: selectedRequest.city || "",
+                state: selectedRequest.state || "",
+                zipCode: selectedRequest.postal_code || "",
+                country: selectedRequest.country || ""
+              },
+              phoneNumber: selectedRequest.user_phone || ""
             },
-            phoneNumber: selectedRequest.user_phone || ""
-          },
-          documents: {
-            frontImage: selectedRequest.doc_front_url,
-            backImage: selectedRequest.doc_back_url,
-            selfieImage: selectedRequest.selfie_url || ""
-          },
-          rejectionReason: selectedRequest.rejection_reason
-        }}
-        onBack={handleBackToList}
-        onApprove={() => {
-          handleApprove(selectedRequest.id)
-          handleBackToList()
-        }}
-        onReject={() => handleReject(selectedRequest.id)}
-      />
+            documents: {
+              frontImage: selectedRequest.doc_front_url,
+              backImage: selectedRequest.doc_back_url,
+              selfieImage: selectedRequest.selfie_url || ""
+            },
+            rejectionReason: selectedRequest.rejection_reason
+          }}
+          onBack={handleBackToList}
+          onApprove={() => {
+            handleApprove(selectedRequest.id)
+            handleBackToList()
+          }}
+          onReject={() => handleReject(selectedRequest.id)}
+        />
+        <RejectionReasonModal
+          isOpen={rejectionModal.isOpen}
+          onClose={() => setRejectionModal({ isOpen: false, requestId: null })}
+          onSubmit={(reason) => rejectionModal.requestId && handleRejectWithReason(rejectionModal.requestId, reason)}
+          title="Reject KYC Request"
+          description="Please provide a reason for rejecting this KYC request. This will help the user understand what needs to be corrected."
+        />
+      </>
     )
   }
 
