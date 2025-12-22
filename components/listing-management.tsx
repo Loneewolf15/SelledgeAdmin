@@ -260,7 +260,7 @@ export function ListingManagement() {
         <>
           <ListingDetailView
             listing={{
-              listing_id: listing.id,
+              listing_id: listing.listing_id,
               id: listing.id,
               title: listing.title,
               description: listing.description,
@@ -453,7 +453,7 @@ export function ListingManagement() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleToggleActive(listing.id, listing.status)}
+                              onClick={() => handleToggleActive(listing.listing_id, listing.status)}
                             >
                               {listing.status === "active" ? "Deactivate" : "Activate"}
                             </Button>
