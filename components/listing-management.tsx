@@ -461,7 +461,7 @@ export function ListingManagement() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(listing.id)}
+                            onClick={() => handleDelete(listing.listing_id)}
                             title="Delete Listing"
                           >
                             <Trash2 className="w-4 h-4" />
